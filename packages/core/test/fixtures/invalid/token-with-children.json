@@ -1,0 +1,6 @@
+{
+  "size": {
+    "$value": "10px",
+    "nested": { "$value": "5px" }
+  }
+}

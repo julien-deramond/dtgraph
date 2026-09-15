@@ -1,0 +1,14 @@
+{
+  "color": {
+    "brand": {
+      "$type": "color",
+      "$value": "#3311ff",
+      "$extensions": {
+        "com.example.tool": { "foo": "bar" }
+      }
+    },
+    "accent": {
+      "$value": "{color.brand}"
+    }
+  }
+}

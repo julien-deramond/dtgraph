@@ -1,0 +1,10 @@
+{
+  "space": {
+    "$type": "dimension",
+    "small": { "$value": "4px" },
+    "responsive": {
+      "large": { "$value": "16px" },
+      "compact": { "$value": "8px", "$type": "dimension" }
+    }
+  }
+}

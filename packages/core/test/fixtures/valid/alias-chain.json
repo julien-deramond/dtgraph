@@ -1,0 +1,14 @@
+{
+  "color": {
+    "base": {
+      "$type": "color",
+      "$value": "#112233"
+    },
+    "mid": {
+      "$value": "{color.base}"
+    },
+    "top": {
+      "$value": "{color.mid}"
+    }
+  }
+}

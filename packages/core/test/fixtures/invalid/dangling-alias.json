@@ -1,0 +1,7 @@
+{
+  "color": {
+    "accent": {
+      "$value": "{color.nonexistent}"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "color": {
+    "shadow-tint": {
+      "$type": "color",
+      "$value": "#000000"
+    }
+  },
+  "shadow": {
+    "base": {
+      "$type": "shadow",
+      "$value": {
+        "color": "{color.shadow-tint}",
+        "offsetX": { "value": 0, "unit": "px" },
+        "offsetY": { "value": 1, "unit": "px" },
+        "blur": { "value": 2, "unit": "px" },
+        "spread": { "value": 0, "unit": "px" }
+      }
+    },
+    "layered": {
+      "$type": "shadow",
+      "$value": [
+        "{shadow.base}",
+        {
+          "color": "{color.shadow-tint}",
+          "offsetX": { "value": 0, "unit": "px" },
+          "offsetY": { "value": 4, "unit": "px" },
+          "blur": { "value": 8, "unit": "px" },
+          "spread": { "value": 0, "unit": "px" }
+        }
+      ]
+    }
+  }
+}

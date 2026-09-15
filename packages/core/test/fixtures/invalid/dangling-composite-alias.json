@@ -1,0 +1,12 @@
+{
+  "border": {
+    "focusring": {
+      "$type": "border",
+      "$value": {
+        "color": "{color.nonexistent}",
+        "width": { "value": 1, "unit": "px" },
+        "style": "solid"
+      }
+    }
+  }
+}

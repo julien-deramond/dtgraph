@@ -1,0 +1,60 @@
+---
+title: Interactive viewer
+description: Explore a token graph as a zoomable map — clusters, blast radius, search, and a detail panel for every token.
+sidebar:
+  order: 3
+---
+
+import TokenGraph from '@dtgraph/mdx/TokenGraph.astro';
+
+The interactive viewer (`@dtgraph/viewer`) turns a token graph into a map you can explore. It
+powers the [playground](../../), the [Storybook addon](https://github.com/julien-deramond/dtgraph/tree/main/packages/storybook),
+and the `<TokenGraph interactive />` component this page uses below.
+
+Here is a sample design system of about 500 tokens. Drag to pan, scroll to zoom, hover a token,
+click one, or press `/` to search:
+
+<TokenGraph interactive file="src/samples/design-system.json" height="560px" />
+
+## Reading the map
+
+- **Dots are tokens; size is blast radius.** A token grows with the number of tokens that
+  depend on it, directly or through other aliases. The big dots are the primitives everything
+  hangs off — change one and you change all of them.
+- **Color is the top-level group** (`color.*`, `button.*`, ...). Edges take the color of the
+  token that holds the alias, so a cluster's edge colors tell you who is doing the referencing.
+  The legend (bottom left) lists every group with its count; click one to show only it.
+- **Position is structure.** Tokens that reference each other pull together, so semantic
+  tokens sit between the primitives they use and the components that use them. Tokens nobody
+  references and that reference nothing sit in small discs around the core, one disc per group.
+- **Labels appear as you zoom.** Zoomed out you see the hubs; zoom in and every token is named.
+
+Small graphs (up to about two dozen tokens) are laid out as a diagram instead: primitives on the
+left, each consumer one column to the right of the deepest token it references.
+
+## Exploring
+
+- **Hover** a token to spotlight it and its direct neighbors; everything else fades.
+- **Click** a token to select it. Its whole upstream chain (what it resolves through) and its
+  downstream set (everything that would change if it changed) stay lit, and the detail panel
+  opens with the token's type, group, description, raw `$value`, what it resolves to (with a
+  color swatch), and clickable lists of what it depends on and what uses it. Composite-member
+  references (a `border`'s `color`, a `shadow`'s `offsetY`, ...) are tagged with the member
+  name.
+- **Search** with `/` (or `Ctrl`/`Cmd`+`K`). Results rank whole-segment matches first, then
+  prefixes, then substrings; spaces match across segments (`btn bg` finds `button.primary.bg`).
+  Arrow keys and `Enter` pick a result and fly to it.
+- `Esc` clears the selection and search, `f` fits the whole graph back into view, and
+  double-clicking a token dives onto it.
+
+## Using it yourself
+
+- **In docs**: [`<TokenGraph interactive />`](https://github.com/julien-deramond/dtgraph/tree/main/packages/mdx)
+  in any MDX or Astro page.
+- **In Storybook**: the [addon panel](https://github.com/julien-deramond/dtgraph/tree/main/packages/storybook)
+  shows each story's tokens.
+- **Anywhere else**: [`@dtgraph/viewer`](https://github.com/julien-deramond/dtgraph/tree/main/packages/viewer)
+  exposes `mountTokenGraphViewer(container, graph, options)` — framework-agnostic, one call.
+
+Token content never becomes markup: labels are drawn on a canvas and every panel is built with
+`textContent`, so the viewer is safe to point at untrusted token files (the playground does).

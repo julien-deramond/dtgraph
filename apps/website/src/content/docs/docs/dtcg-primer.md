@@ -89,8 +89,8 @@ aliases across all of them, as long as no two files define a token at the same p
 
 ## Where to go next
 
-- Try it yourself in **[the playground](/)** — paste one of the examples above.
-- Read the **[Getting started](/docs/getting-started/)** guide to install the CLI.
+- Try it yourself in **[the playground](../../)** — paste one of the examples above.
+- Read the **[Getting started](../getting-started/)** guide to install the CLI.
 - For anything not covered here — property-level references, JSON Pointer syntax, the full set
   of composite type shapes — see the
   [DTCG format spec](https://www.designtokens.org/tr/2025.10/format/) directly.

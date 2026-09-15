@@ -4,7 +4,12 @@ import { defineConfig } from 'astro/config';
 import { CSP_HEADER_VALUE } from './src/lib/csp.js';
 
 export default defineConfig({
-  site: 'https://dtgraph.dev',
+  // Deployed to GitHub Pages as a project site (github.com/julien-deramond/dtgraph) rather than
+  // a github.io user/org root, so it's served under a /dtgraph/ path — see #27 and
+  // apps/website/README.md. Swap to a custom domain's root URL (and drop `base`) if one is
+  // ever configured via a CNAME.
+  site: 'https://julien-deramond.github.io',
+  base: '/dtgraph',
   integrations: [
     starlight({
       title: 'dtgraph',

@@ -1,0 +1,9 @@
+dist
+build
+node_modules
+pnpm-lock.yaml
+
+# Hand-authored governance docs/templates: leave their existing formatting
+# alone for now rather than reformatting unrelated content in this PR.
+*.md
+.github/ISSUE_TEMPLATE/

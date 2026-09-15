@@ -2,6 +2,7 @@
   "name": "dtgraph-monorepo",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "description": "Monorepo for dtgraph",
   "license": "MIT",
   "author": "Julien Déramond",
@@ -14,11 +15,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "format": "biome format --write ."
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.13"
+    "@eslint/js": "10.0.1",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "typescript-eslint": "8.70.0"
   }
 }

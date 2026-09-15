@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in dtgraph isn't working as expected.
+title: "[Bug]: "
+labels:
+  - bug
+  - needs-triage
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reproduce the behavior. Include a sample DTCG token file if relevant.
+      placeholder: |
+        1. Run `dtgraph ...`
+        2. With this token file: ...
+        3. See error / wrong graph output
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: dtgraph version, Node.js version, OS.
+      placeholder: |
+        dtgraph: 0.1.0
+        Node: 20.x
+        OS: macOS 15
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Logs, screenshots of the rendered graph, or links to related issues.
+    validations:
+      required: false

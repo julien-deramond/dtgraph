@@ -1,0 +1,32 @@
+name: Enhancement
+description: Improve something that already exists in dtgraph (not a new capability, not a bug).
+title: "[Enhancement]: "
+labels:
+  - enhancement
+  - needs-triage
+body:
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current behavior
+      description: What does dtgraph do today, and where does it fall short?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed change
+      description: >
+        What should change, specifically? Be concrete enough to implement from this
+        description alone — e.g. the exact behavior, output, or interface to change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Links to related issues, discussions, or examples.
+    validations:
+      required: false

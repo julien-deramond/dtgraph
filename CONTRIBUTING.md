@@ -13,10 +13,14 @@ changes, and get code reviewed — for both human and AI-agent contributors.
 ## Development workflow
 
 1. Create a branch off `main` (`feature/...`, `fix/...`, `chore/...`).
-2. Make your changes, with tests where applicable.
-3. Open a pull request against `main` using the PR template. Fill in every section —
-   a PR description should let a reviewer understand *what* changed and *why* without
-   reading the whole diff first.
+2. Make your changes, with tests where applicable. Commit messages must follow
+   [Conventional Commits](https://www.conventionalcommits.org/) (`feat: ...`,
+   `fix: ...`, `docs: ...`, `chore: ...`, etc.) — this is a hard requirement, not a
+   suggestion.
+3. Open a pull request against `main` using the PR template. Its title must also
+   follow Conventional Commits (e.g. `feat: render composite-token edges`). Fill in
+   every section of the description — a reviewer should understand *what* changed and
+   *why* without reading the whole diff first.
 4. Link the PR to the issue it resolves (`Closes #N`).
 5. Label the PR to match the "Type of change" you checked in the template
    (`bug`, `feature`, `enhancement`, or `documentation`), plus `ai-submitted` if it

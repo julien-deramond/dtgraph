@@ -86,5 +86,5 @@ canvas or sets it as `textContent`.
 
 See [`examples/mdx-astro`](../../examples/mdx-astro) for a minimal runnable Astro + MDX project
 using this component, or [`apps/website`](../../apps/website)'s own
-[DTCG primer](../../apps/website/src/content/docs/docs/dtcg-primer.mdx) page for a real
+[DTCG primer](../../apps/website/src/content/docs/dtcg-primer.mdx) page for a real
 dogfooded example (two live `<TokenGraph>` embeds explaining aliases and composite tokens).

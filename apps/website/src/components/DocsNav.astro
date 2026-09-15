@@ -1,0 +1,73 @@
+---
+import type { DocsPage } from '../lib/docs.js';
+
+export interface Props {
+  pages: DocsPage[];
+  currentId: string;
+}
+
+const { pages, currentId } = Astro.props;
+---
+
+<nav class="docs-nav" aria-label="Docs">
+  <ul>
+    {
+      pages.map((page) => (
+        <li>
+          <a href={page.href} aria-current={page.id === currentId ? 'page' : undefined}>
+            {page.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .docs-nav ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .docs-nav a {
+    display: block;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .docs-nav a:hover {
+    color: var(--fg);
+    background: var(--surface-muted);
+  }
+  .docs-nav a[aria-current='page'] {
+    color: var(--accent-soft-fg);
+    background: var(--accent-soft-bg);
+  }
+  /* Narrow screens: the same list as one scrollable row of pills above the article. */
+  @media (max-width: 900px) {
+    .docs-nav ul {
+      flex-direction: row;
+      gap: 0.35rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      scrollbar-width: thin;
+    }
+    .docs-nav li {
+      flex: none;
+    }
+    .docs-nav a {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .docs-nav a[aria-current='page'] {
+      border-color: var(--accent-soft-border);
+    }
+  }
+</style>

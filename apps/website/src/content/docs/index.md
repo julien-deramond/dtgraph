@@ -1,9 +1,8 @@
 ---
 title: dtgraph docs
 description: Documentation for dtgraph — render and validate DTCG token graphs.
-sidebar:
-  order: 0
-  label: Overview
+order: 0
+label: Overview
 ---
 
 dtgraph turns [DTCG](https://www.designtokens.org/tr/2025.10/format/) design token files into

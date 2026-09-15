@@ -1,0 +1,123 @@
+/*
+ * Site-wide base styles, on top of the tokens in tokens.css: the reset, body, links, focus
+ * rings, the shared button look, and the light/dark switch for Shiki code blocks. Anything a
+ * page needs beyond this lives in that page's or layout's own scoped <style>.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-height) + 1rem);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+a:hover {
+  color: var(--link-hover);
+}
+
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
+
+/* Shared controls: the header's theme toggle and the playground's toolbar are the same button. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: inherit;
+  background: var(--surface);
+  line-height: 1.2;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--surface-muted);
+}
+.btn--primary {
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  background: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.btn--primary:hover {
+  background: var(--accent-hover);
+}
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+}
+.btn--icon {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+/*
+ * Code blocks: Astro renders every fence through Shiki with both themes attached (see
+ * astro.config.mjs's shikiConfig), each token carrying `--shiki-light`/`--shiki-dark` custom
+ * properties instead of a fixed color. Pick the half matching the current color-scheme, the
+ * same way tokens.css does for the rest of the palette.
+ */
+.astro-code,
+.astro-code span {
+  color: light-dark(var(--shiki-light), var(--shiki-dark));
+  background-color: light-dark(var(--shiki-light-bg), var(--shiki-dark-bg));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

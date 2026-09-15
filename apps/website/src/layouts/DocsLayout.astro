@@ -1,0 +1,221 @@
+---
+/**
+ * A docs page: the shared shell plus a sidebar of every page, the article itself, and an
+ * "on this page" outline. The prose styles below are global on purpose — the article body is
+ * rendered Markdown/MDX, which Astro's scoped styles cannot reach.
+ */
+import type { MarkdownHeading } from 'astro';
+
+import DocsNav from '../components/DocsNav.astro';
+import Pagination from '../components/Pagination.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import { docsNeighbors } from '../lib/docs.js';
+import type { DocsPage } from '../lib/docs.js';
+import SiteLayout from './SiteLayout.astro';
+
+export interface Props {
+  page: DocsPage;
+  /** Every docs page, in sidebar order. */
+  pages: DocsPage[];
+  headings: MarkdownHeading[];
+}
+
+const { page, pages, headings } = Astro.props;
+const { previous, next } = docsNeighbors(pages, page.id);
+---
+
+<SiteLayout title={page.title} description={page.description}>
+  <div class="docs">
+    <aside class="docs__sidebar">
+      <DocsNav pages={pages} currentId={page.id} />
+    </aside>
+    <article class="docs__article">
+      <header class="docs__header">
+        <h1>{page.title}</h1>
+        <p class="docs__lead">{page.description}</p>
+      </header>
+      <div class="prose">
+        <slot />
+      </div>
+      <Pagination previous={previous} next={next} />
+    </article>
+    <aside class="docs__toc">
+      <TableOfContents headings={headings} />
+    </aside>
+  </div>
+</SiteLayout>
+
+<style>
+  .docs {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
+    gap: 3rem;
+    width: 100%;
+    max-width: calc(
+      var(--sidebar-width) + var(--content-width) + var(--toc-width) + 6rem + 2 * var(--gutter)
+    );
+    margin: 0 auto;
+    padding: 2rem var(--gutter) 4rem;
+  }
+  .docs__sidebar,
+  .docs__toc {
+    position: sticky;
+    top: calc(var(--header-height) + 2rem);
+    align-self: start;
+    max-height: calc(100vh - var(--header-height) - 2rem);
+    overflow-y: auto;
+  }
+  .docs__article {
+    min-width: 0;
+  }
+  .docs__header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .docs__header h1 {
+    margin: 0 0 0.5rem;
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    color: var(--fg-strong);
+  }
+  .docs__lead {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-md);
+  }
+  @media (max-width: 1100px) {
+    .docs {
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    }
+    .docs__toc {
+      display: none;
+    }
+  }
+  @media (max-width: 900px) {
+    .docs {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+      padding-top: 1.25rem;
+    }
+    .docs__sidebar {
+      position: static;
+      max-height: none;
+      overflow: visible;
+    }
+    .docs__header h1 {
+      font-size: var(--text-xl);
+    }
+  }
+</style>
+
+<style is:global>
+  .prose > :first-child {
+    margin-top: 0;
+  }
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    color: var(--fg-strong);
+    line-height: var(--leading-tight);
+    scroll-margin-top: calc(var(--header-height) + 1rem);
+  }
+  .prose h2 {
+    margin: 2.5rem 0 0.75rem;
+    font-size: var(--text-lg);
+  }
+  .prose h3 {
+    margin: 1.75rem 0 0.5rem;
+    font-size: var(--text-md);
+  }
+  .prose h4 {
+    margin: 1.5rem 0 0.5rem;
+    font-size: var(--text-base);
+  }
+  .prose p,
+  .prose ul,
+  .prose ol,
+  .prose blockquote {
+    margin: 0 0 1rem;
+  }
+  .prose ul,
+  .prose ol {
+    padding-left: 1.5rem;
+  }
+  .prose li + li {
+    margin-top: 0.3rem;
+  }
+  .prose strong {
+    color: var(--fg-strong);
+  }
+  .prose code {
+    font-size: 0.875em;
+  }
+  .prose :not(pre) > code {
+    padding: 0.1em 0.35em;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    overflow-wrap: anywhere;
+  }
+  .prose pre {
+    margin: 0 0 1.25rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    font-size: var(--text-sm);
+    line-height: 1.55;
+  }
+  .prose pre code {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: inherit;
+  }
+  .prose blockquote {
+    padding: 0.25rem 1rem;
+    border-left: 3px solid var(--line-strong);
+    color: var(--muted);
+  }
+  .prose hr {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+  .prose table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 0 1.25rem;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .prose th,
+  .prose td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose th {
+    background: var(--surface-muted);
+    color: var(--fg-strong);
+    font-weight: 600;
+  }
+  .prose img,
+  .prose > svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 0 1.25rem;
+  }
+  /* @dtgraph/mdx's interactive embeds */
+  .prose .dtgraph-mdx {
+    margin: 1.25rem 0;
+    border: 1px solid var(--line);
+  }
+</style>

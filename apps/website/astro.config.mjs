@@ -1,8 +1,5 @@
 import mdx from '@astrojs/mdx';
-import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-
-import { CSP_HEADER_VALUE } from './src/lib/csp.js';
 
 export default defineConfig({
   // Deployed to GitHub Pages as a project site (github.com/julien-deramond/dtgraph) rather than
@@ -11,30 +8,20 @@ export default defineConfig({
   // ever configured via a CNAME.
   site: 'https://julien-deramond.github.io',
   base: '/dtgraph',
-  integrations: [
-    starlight({
-      title: 'dtgraph',
-      description: 'Render and validate Design Tokens Community Group (DTCG) token graphs.',
-      social: [
-        { icon: 'github', label: 'GitHub', href: 'https://github.com/julien-deramond/dtgraph' },
-      ],
-      // Docs content lives under src/content/docs/docs/* so its routes land at /docs/*,
-      // leaving the site root ("/") free for the playground page in src/pages/index.astro.
-      sidebar: [
-        {
-          label: 'Docs',
-          items: [{ autogenerate: { directory: 'docs' } }],
-        },
-      ],
-      // Starlight renders its own layout, not SiteLayout.astro, so the same baseline CSP
-      // (see src/lib/csp.ts) is injected here to cover the /docs/* pages too.
-      head: [
-        {
-          tag: 'meta',
-          attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP_HEADER_VALUE },
-        },
-      ],
-    }),
-    mdx(),
-  ],
+  integrations: [mdx()],
+  vite: {
+    build: {
+      // Never inline a small bundled <script> into the HTML: the site's CSP (src/lib/csp.ts)
+      // is `script-src 'self'` with no hashes, so an inlined module would simply be blocked.
+      assetsInlineLimit: 0,
+    },
+  },
+  markdown: {
+    shikiConfig: {
+      // Both themes ship in every code block as CSS custom properties; src/styles/global.css
+      // picks one per the site's color-scheme, so fences follow the theme toggle live.
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
+    },
+  },
 });

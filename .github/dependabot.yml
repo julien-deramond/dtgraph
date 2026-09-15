@@ -18,6 +18,12 @@ updates:
       npm:
         patterns:
           - '*'
+    ignore:
+      # TypeScript 7's native compiler doesn't yet expose the programmatic API
+      # that @astrojs/language-server needs for `astro check`.
+      # See https://github.com/withastro/roadmap/discussions/1321
+      - dependency-name: 'typescript'
+        versions: ['>=7.0.0']
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

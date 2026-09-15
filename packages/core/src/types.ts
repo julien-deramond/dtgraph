@@ -28,3 +28,13 @@ export interface GroupNode {
 }
 
 export type TokenTreeNode = TokenNode | GroupNode;
+
+/** A graph edge produced by resolving a `{group.path.to.token}` alias in a token's `$value`. */
+export interface TokenEdge {
+  /** Path of the token whose `$value` contains the alias reference. */
+  from: string[];
+  /** Path of the token the alias reference resolves to. */
+  to: string[];
+  /** The raw, unresolved alias reference, e.g. `"{color.brand}"`. */
+  reference: string;
+}

@@ -3,6 +3,7 @@ import type { Settings } from 'sigma/settings';
 import type { EdgeDisplayData, NodeDisplayData, PartialButFor } from 'sigma/types';
 
 import type { ViewerEdgeAttributes, ViewerGraph, ViewerNodeAttributes } from './build-graph.js';
+import { edgeInFocus, type FocusSets } from './focus.js';
 import { fadeTowards } from './palette.js';
 import type { ThemeColors } from './theme.js';
 
@@ -18,10 +19,38 @@ export interface InteractionState {
   hovered: string | null;
   /** The hovered node plus its direct neighbors in both directions. */
   neighborhood: Set<string>;
+  /** The clicked/searched token, if any, with its transitive relations. */
+  selected: string | null;
+  focus: FocusSets | null;
+  /** A legend category to show alone (everything else dims), keyed like `categoryOf`. */
+  solo: string | null;
+  categoryOf: (node: string) => string;
 }
 
-export function createInteractionState(): InteractionState {
-  return { hovered: null, neighborhood: new Set() };
+export function createInteractionState(
+  categoryOf: (node: string) => string = () => '',
+): InteractionState {
+  return {
+    hovered: null,
+    neighborhood: new Set(),
+    selected: null,
+    focus: null,
+    solo: null,
+    categoryOf,
+  };
+}
+
+/** How a node should draw given the current interaction state. */
+export type NodeEmphasis = 'lit' | 'normal' | 'dimmed';
+
+export function nodeEmphasis(state: InteractionState, node: string): NodeEmphasis {
+  if (state.solo !== null && state.categoryOf(node) !== state.solo) return 'dimmed';
+  if (state.hovered !== null) return state.neighborhood.has(node) ? 'lit' : 'dimmed';
+  if (state.selected !== null && state.focus !== null) {
+    if (node === state.selected) return 'lit';
+    return state.focus.all.has(node) ? 'lit' : 'dimmed';
+  }
+  return 'normal';
 }
 
 /** Font size for a label: grows with the node's rendered size (like Gephi), within sane bounds. */
@@ -103,27 +132,46 @@ export function createSigmaSettings(
     doubleClickZoomingRatio: 2.5,
 
     nodeReducer: (node, data): Partial<NodeDisplayData> => {
-      if (state.hovered === null) return data;
-      if (state.neighborhood.has(node)) {
-        return { ...data, zIndex: data.zIndex + 1_000_000, forceLabel: true };
+      const emphasis = nodeEmphasis(state, node);
+      if (emphasis === 'dimmed') {
+        return {
+          ...data,
+          color: fadeTowards(data.color, theme.background, theme.fadedNodeStrength),
+          label: null,
+        };
       }
+      if (emphasis === 'normal') return data;
+      // Lit: keep the color, draw on top. Labels are forced for the hovered/selected token and
+      // its direct neighbors; the wider focus set stays subject to the label grid so a primitive
+      // with hundreds of dependents doesn't bury the map in text.
+      const anchor = state.hovered ?? state.selected;
+      const direct = anchor !== null && (node === anchor || graph.areNeighbors(anchor, node));
       return {
         ...data,
-        color: fadeTowards(data.color, theme.background, theme.fadedNodeStrength),
-        label: null,
+        zIndex: data.zIndex + 1_000_000,
+        forceLabel: direct,
+        highlighted: node === state.selected && state.hovered === null,
       };
     },
     edgeReducer: (edge, data): Partial<EdgeDisplayData> => {
-      if (state.hovered === null) {
-        return { ...data, color: fadeTowards(data.color, theme.background, theme.edgeStrength) };
-      }
       const [source, target] = graph.extremities(edge);
-      const inFocus = source === state.hovered || target === state.hovered;
-      if (inFocus) return { ...data, size: 1.6, zIndex: 1 };
-      return {
+      const dimmed = {
         ...data,
         color: fadeTowards(data.color, theme.background, theme.fadedEdgeStrength),
       };
+      const lit = { ...data, size: 1.6, zIndex: 1 };
+      if (state.solo !== null) {
+        if (state.categoryOf(source) !== state.solo && state.categoryOf(target) !== state.solo) {
+          return dimmed;
+        }
+      }
+      if (state.hovered !== null) {
+        return source === state.hovered || target === state.hovered ? lit : dimmed;
+      }
+      if (state.selected !== null && state.focus !== null) {
+        return edgeInFocus(graph, edge, state.selected, state.focus) ? lit : dimmed;
+      }
+      return { ...data, color: fadeTowards(data.color, theme.background, theme.edgeStrength) };
     },
   };
 }

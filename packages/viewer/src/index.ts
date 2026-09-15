@@ -25,5 +25,11 @@ export {
 export type { Extent } from './layout.js';
 export type { LayoutOptions } from './layout.js';
 export { assignCategoryColors, DARK_PALETTE, fadeTowards, LIGHT_PALETTE } from './palette.js';
+export { collectDownstream, collectFocus, collectUpstream, edgeInFocus } from './focus.js';
+export type { FocusSets } from './focus.js';
+export { searchTokens } from './search.js';
+export type { SearchHit } from './search.js';
+export { resolveValue, swatchColor } from './resolve-value.js';
+export type { ResolvedValue } from './resolve-value.js';
 export { THEMES } from './theme.js';
 export type { ThemeColors, ViewerTheme } from './theme.js';

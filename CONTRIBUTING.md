@@ -27,6 +27,27 @@ changes, and get code reviewed — for both human and AI-agent contributors.
    was opened by an agent. Labels aren't optional decoration — filtering PRs by label
    is how reviewers and future contributors find related work.
 
+## Release process
+
+Publishable packages (`dtgraph`, `@dtgraph/core`, `@dtgraph/mdx`, `@dtgraph/storybook`,
+`@dtgraph/viewer`) are versioned and published with [Changesets](https://github.com/changesets/changesets).
+
+1. Any PR that changes a publishable package's behavior must include a changeset:
+   run `pnpm changeset`, pick the affected package(s) and bump type (patch/minor/major),
+   and describe the change from a consumer's point of view. Commit the generated file
+   under `.changeset/`.
+2. Merging PRs with changesets into `main` triggers the `Release` workflow
+   ([.github/workflows/release.yml](.github/workflows/release.yml)), which opens or
+   updates a `chore: version packages` pull request that bumps versions and updates
+   changelogs.
+3. Merging that pull request triggers the same workflow again; this time, with no
+   changesets left pending, it publishes the updated packages to npm and tags the
+   release on GitHub.
+4. Publishing authenticates to npm via [trusted publishing](https://docs.npmjs.com/trusted-publishers/)
+   (OIDC) — there is no long-lived npm token stored in this repository. Each publishable
+   package must have a trusted publisher configured on npmjs.com for this repository and
+   the `release.yml` workflow before its first release.
+
 ## Labels
 
 Labels apply to **both issues and pull requests** — a PR without a type label is

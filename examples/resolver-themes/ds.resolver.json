@@ -1,0 +1,23 @@
+{
+  "name": "Design system",
+  "version": "2025.10",
+  "description": "Base palette, a light/dark theme modifier, then components on top.",
+  "sets": {
+    "base": { "sources": [{ "$ref": "base.json" }] },
+    "components": { "sources": [{ "$ref": "components.json" }] }
+  },
+  "modifiers": {
+    "theme": {
+      "default": "light",
+      "contexts": {
+        "light": [{ "$ref": "themes/light.json" }],
+        "dark": [{ "$ref": "themes/dark.json" }]
+      }
+    }
+  },
+  "resolutionOrder": [
+    { "$ref": "#/sets/base" },
+    { "$ref": "#/modifiers/theme" },
+    { "$ref": "#/sets/components" }
+  ]
+}

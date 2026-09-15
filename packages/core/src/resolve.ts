@@ -193,7 +193,7 @@ export function resolveAliasEdges(tree: TokenTreeNode): TokenEdge[] {
   return resolveEdgesFromTokenMap(tokensByPath);
 }
 
-/** One parsed file to merge via {@link resolveAliasEdgesAcrossFiles}. */
+/** One parsed file to merge via {@link resolveAliasEdgesAcrossFiles} or {@link mergeTokenTreesWithOverrides}. */
 export interface NamedTokenTree {
   /** Identifier for this file (e.g. its path). Recorded on each token's `source` and used in collision error messages. */
   source: string;
@@ -226,4 +226,29 @@ export function resolveAliasEdgesAcrossFiles(files: NamedTokenTree[]): TokenEdge
     }
   }
   return resolveEdgesFromTokenMap(tokensByPath);
+}
+
+/** The merged token space produced by {@link mergeTokenTreesWithOverrides}. */
+export interface MergedTokenSpace {
+  /** Every token that survived the merge, in first-seen order, with `source` set to the file that won. */
+  nodes: TokenNode[];
+  edges: TokenEdge[];
+}
+
+/**
+ * Merge multiple parsed token trees into a single token space where a token defined in a later
+ * file **overrides** the same path from an earlier file, then resolve aliases against the merged
+ * space. This is the DTCG Resolver Module's "last occurrence wins" rule, used when a resolver
+ * document drives the merge; plain multi-file input keeps the strict, collision-is-an-error
+ * behavior of {@link resolveAliasEdgesAcrossFiles}.
+ */
+export function mergeTokenTreesWithOverrides(files: NamedTokenTree[]): MergedTokenSpace {
+  const tokensByPath = new Map<string, TokenNode>();
+  for (const file of files) {
+    for (const token of flattenTokenTree(file.tree)) {
+      tokensByPath.set(token.path.join('.'), { ...token, source: file.source });
+    }
+  }
+  const edges = resolveEdgesFromTokenMap(tokensByPath);
+  return { nodes: [...tokensByPath.values()], edges };
 }

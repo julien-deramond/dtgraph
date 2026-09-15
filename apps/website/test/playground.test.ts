@@ -22,13 +22,13 @@ const VALID = {
 
 describe('buildTokenGraphFromFiles', () => {
   it('parses and resolves a single valid token file', () => {
-    const graph = buildTokenGraphFromFiles([VALID]);
+    const { graph } = buildTokenGraphFromFiles([VALID]);
     expect(graph.nodes.map((node) => node.path.join('.'))).toEqual(['color.brand', 'color.accent']);
     expect(graph.edges).toHaveLength(1);
   });
 
   it('resolves aliases across multiple files', () => {
-    const graph = buildTokenGraphFromFiles([
+    const { graph } = buildTokenGraphFromFiles([
       {
         source: 'color.json',
         content: JSON.stringify({ color: { brand: { $type: 'color', $value: '#112233' } } }),
@@ -192,5 +192,97 @@ describe('createPlayground', () => {
     expect(els.output.children).toHaveLength(0);
     expect(playground.graph).toBeUndefined();
     expect(playground.files).toEqual([]);
+  });
+});
+
+describe('resolver files in the playground', () => {
+  const RESOLVER = {
+    source: 'ds.resolver.json',
+    content: JSON.stringify({
+      version: '2025.10',
+      sets: { base: { sources: [{ $ref: 'base.json' }] } },
+      modifiers: {
+        theme: {
+          default: 'light',
+          contexts: {
+            light: [{ $ref: 'themes/light.json' }],
+            dark: [{ $ref: 'themes/dark.json' }],
+          },
+        },
+      },
+      resolutionOrder: [{ $ref: '#/sets/base' }, { $ref: '#/modifiers/theme' }],
+    }),
+  };
+  const BASE = {
+    source: 'base.json',
+    content: JSON.stringify({
+      color: { $type: 'color', a: { $value: '#000' }, b: { $value: '#fff' } },
+    }),
+  };
+  const LIGHT = {
+    source: 'light.json',
+    content: JSON.stringify({ semantic: { bg: { $type: 'color', $value: '{color.b}' } } }),
+  };
+  const DARK = {
+    source: 'dark.json',
+    content: JSON.stringify({ semantic: { bg: { $type: 'color', $value: '{color.a}' } } }),
+  };
+  const UNRELATED = { source: 'unrelated.json', content: JSON.stringify({}) };
+
+  function setup() {
+    const els = { output: document.createElement('div'), error: document.createElement('p') };
+    const mount = vi.fn(() => ({ destroy: vi.fn() }));
+    return { els, playground: createPlayground(els, mount) };
+  }
+
+  it('detects the resolver by shape and matches $ref files by name', () => {
+    const build = buildTokenGraphFromFiles([RESOLVER, BASE, LIGHT, DARK]);
+    expect(build.resolver?.contexts).toEqual({ theme: 'light' });
+    expect(build.graph.getOutgoingEdges(['semantic', 'bg'])[0].to).toEqual(['color', 'b']);
+
+    const dark = buildTokenGraphFromFiles([RESOLVER, BASE, LIGHT, DARK], {
+      context: { theme: 'dark' },
+    });
+    expect(dark.graph.getOutgoingEdges(['semantic', 'bg'])[0].to).toEqual(['color', 'a']);
+  });
+
+  it('exposes the modifiers, used and ignored files, and switches contexts in place', () => {
+    const { els, playground } = setup();
+
+    expect(playground.load([RESOLVER, BASE, LIGHT, DARK, UNRELATED])).toBe(true);
+    expect(playground.resolver).toEqual({
+      source: 'ds.resolver.json',
+      modifiers: [{ name: 'theme', contexts: ['light', 'dark'], selected: 'light' }],
+      sources: ['base.json', 'light.json'],
+      ignored: ['dark.json', 'unrelated.json'],
+    });
+
+    expect(playground.setContext('theme', 'dark')).toBe(true);
+    expect(playground.resolver?.modifiers[0].selected).toBe('dark');
+    expect(playground.resolver?.sources).toEqual(['base.json', 'dark.json']);
+    expect(playground.resolver?.ignored).toEqual(['light.json', 'unrelated.json']);
+    expect(playground.graph?.getOutgoingEdges(['semantic', 'bg'])[0].to).toEqual(['color', 'a']);
+    expect(els.error.hidden).toBe(true);
+  });
+
+  it('reports a missing referenced file as plain text and keeps the previous graph', () => {
+    const { els, playground } = setup();
+    expect(playground.load([VALID])).toBe(true);
+
+    expect(playground.load([RESOLVER, BASE, DARK])).toBe(false);
+    expect(els.error.hidden).toBe(false);
+    expect(els.error.textContent).toMatch(
+      /"\$ref": "themes\/light.json" does not match any provided file/,
+    );
+    expect(playground.graph?.nodes).toHaveLength(2);
+    expect(playground.resolver).toBeUndefined();
+  });
+
+  it('forgets the resolver when plain token files are loaded next', () => {
+    const { playground } = setup();
+    playground.load([RESOLVER, BASE, LIGHT, DARK]);
+    expect(playground.resolver).toBeDefined();
+    playground.load([VALID]);
+    expect(playground.resolver).toBeUndefined();
   });
 });

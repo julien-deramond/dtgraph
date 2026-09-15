@@ -9,7 +9,8 @@ legible as a design system grows.
 
 ## Try it
 
-Open the [playground](https://julien-deramond.github.io/dtgraph/) and drop a DTCG file on it:
+Open the [playground](https://julien-deramond.github.io/dtgraph/) and drop a DTCG file on it
+(or a `*.resolver.json` with the files it references, then switch between its contexts):
 tokens cluster by what they reference, the most-depended-on primitives are the biggest dots,
 hovering spotlights relations, clicking opens a detail panel, `/` searches. Nothing is uploaded.
 
@@ -17,8 +18,8 @@ hovering spotlights relations, clicking opens a detail panel, `/` searches. Noth
 
 | Package                                    | What it is                                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| [`@dtgraph/core`](packages/core)           | Parse DTCG files, resolve aliases (across files), build the token graph, render a static SVG. |
-| [`dtgraph`](packages/cli)                  | CLI: `dtgraph validate` and `dtgraph render` for one or more token files.                   |
+| [`@dtgraph/core`](packages/core)           | Parse DTCG files and resolver documents, resolve aliases (across files and per context), build the token graph, render a static SVG. |
+| [`dtgraph`](packages/cli)                  | CLI: `dtgraph validate` and `dtgraph render` for one or more token files, or a resolver plus its files. |
 | [`@dtgraph/viewer`](packages/viewer)       | The interactive WebGL map: clusters, blast radius, hover/click focus, search, detail panel.  |
 | [`@dtgraph/mdx`](packages/mdx)             | `<TokenGraph>` for MDX/Astro pages, static SVG or interactive.                              |
 | [`@dtgraph/storybook`](packages/storybook) | Storybook addon panel showing each story's token graph.                                     |

@@ -1,0 +1,7 @@
+{
+  "semantic": {
+    "$type": "color",
+    "bg": { "$value": "{color.gray-100}" },
+    "fg": { "$value": "{color.gray-900}" }
+  }
+}

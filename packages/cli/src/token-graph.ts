@@ -1,18 +1,18 @@
 import { readFile } from 'node:fs/promises';
 
-import {
-  buildTokenGraph,
-  flattenTokenTree,
-  parseTokenTree,
-  resolveAliasEdgesAcrossFiles,
-} from '@dtgraph/core';
-import type { NamedTokenTree, TokenGraph } from '@dtgraph/core';
+import { buildTokenGraphFromDocuments } from '@dtgraph/core';
+import type { ResolverInput, TokenGraphBuild } from '@dtgraph/core';
 
 export interface TokenFileInput {
-  /** File path, used as the `source` tag for cross-file collision/error messages. */
+  /** File path, used as the `source` tag for cross-file collision/error messages and `$ref` lookups. */
   source: string;
-  /** Raw file contents (DTCG JSON). */
+  /** Raw file contents (DTCG JSON, or a DTCG resolver document). */
   content: string;
+}
+
+export interface LoadTokenGraphOptions {
+  /** Context per modifier (`{ theme: "dark" }`), applied when one of the files is a resolver. */
+  context?: ResolverInput;
 }
 
 /** Read a list of file paths into `{ source, content }` pairs `loadAndResolveTokenFiles` accepts. */
@@ -23,16 +23,39 @@ export async function readTokenFiles(paths: string[]): Promise<TokenFileInput[]>
 }
 
 /**
- * Parse and resolve one or more DTCG token file contents into a single `TokenGraph`. Errors
- * from JSON parsing, DTCG parsing, alias resolution, or cycle detection all propagate
- * unmodified — callers should not re-wrap them.
+ * Turn the values of repeated `--context <modifier>=<context>` flags (each possibly holding
+ * several comma-separated pairs) into a resolver input map. Throws on a pair without `=`.
  */
-export function loadAndResolveTokenFiles(files: TokenFileInput[]): TokenGraph {
-  const namedTrees: NamedTokenTree[] = files.map(({ source, content }) => ({
+export function parseContextOptions(values: string[]): ResolverInput {
+  const input: ResolverInput = {};
+  for (const pair of values.flatMap((value) => value.split(','))) {
+    const separator = pair.indexOf('=');
+    const modifier = pair.slice(0, separator).trim();
+    const context = pair.slice(separator + 1).trim();
+    if (separator === -1 || modifier.length === 0 || context.length === 0) {
+      throw new Error(
+        `Invalid --context value "${pair}": expected <modifier>=<context>, e.g. --context theme=dark`,
+      );
+    }
+    input[modifier] = context;
+  }
+  return input;
+}
+
+/**
+ * Parse and resolve one or more DTCG token file contents into a single `TokenGraph`. When one
+ * of the files is a DTCG resolver document, the other files are the pool its `$ref`s resolve
+ * against and `options.context` picks each modifier's context (defaults apply otherwise). Errors
+ * from JSON parsing, DTCG parsing, resolver validation, alias resolution, or cycle detection all
+ * propagate unmodified — callers should not re-wrap them.
+ */
+export function loadAndResolveTokenFiles(
+  files: TokenFileInput[],
+  options: LoadTokenGraphOptions = {},
+): TokenGraphBuild {
+  const documents = files.map(({ source, content }) => ({
     source,
-    tree: parseTokenTree(JSON.parse(content) as unknown),
+    document: JSON.parse(content) as unknown,
   }));
-  const nodes = namedTrees.flatMap(({ tree }) => flattenTokenTree(tree));
-  const edges = resolveAliasEdgesAcrossFiles(namedTrees);
-  return buildTokenGraph(nodes, edges);
+  return buildTokenGraphFromDocuments(documents, { input: options.context });
 }

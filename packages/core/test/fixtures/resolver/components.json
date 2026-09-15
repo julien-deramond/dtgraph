@@ -1,0 +1,7 @@
+{
+  "button": {
+    "$type": "color",
+    "background": { "$value": "{semantic.bg}" },
+    "text": { "$value": "{semantic.fg}" }
+  }
+}

@@ -16,7 +16,9 @@ There are several ways to use it:
   upload, and explore it on the **[interactive map](viewer/)**: clusters, blast radius, search,
   a detail panel for every token.
 - **The [`dtgraph` CLI](cli-reference/)** — `render` a token graph to SVG or `validate`
-  token files in CI, from the command line.
+  token files in CI, from the command line. Both understand
+  [DTCG resolver files](cli-reference/#resolver-files), so a light/dark design system can be
+  checked per context.
 - **In your docs or Storybook** — `@dtgraph/mdx`'s `<TokenGraph>` component embeds a graph
   (static or interactive) in MDX/Astro pages; `@dtgraph/storybook` adds a panel showing each
   story's tokens.

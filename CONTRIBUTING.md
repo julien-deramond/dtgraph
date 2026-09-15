@@ -111,3 +111,16 @@ down explicitly rather than assumed:
   Label the PR with its type (`bug`/`feature`/`enhancement`/`documentation`) plus
   `ai-submitted` — the same rule as issues, applied at PR creation, not left for a
   maintainer to add later.
+- **Closing stale issues.** `Closes #N` in a PR description only catches the issue
+  that PR was written for. After merging a PR (or when a release goes out), check
+  whether the change also resolves *other* open issues that a `Closes #N` link
+  wouldn't have caught — most commonly:
+  - a PR that satisfies an issue's intent without literally implementing it (e.g. a
+    process doc landing inside another file instead of the standalone file an issue
+    asked for);
+  - the changesets "chore: version packages" PR and the publish it triggers, both of
+    which are bot-authored and never carry a `Closes #N` line, but which are exactly
+    the event that resolves a "publish vX.Y.Z" issue.
+  Close (or comment on and re-scope) those issues explicitly, with a comment
+  pointing at the PR, commit, or release that resolved them — don't leave them open
+  just because nothing auto-linked them.

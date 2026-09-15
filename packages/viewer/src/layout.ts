@@ -179,9 +179,9 @@ export interface Extent {
 /**
  * The bounding box Sigma should fit to the viewport. Sigma normalizes positions to the graph's
  * own extent, so a two-token graph would be stretched edge to edge with one node in each corner.
- * Small graphs get a box grown around their center instead — `~sqrt(24 / order)` times larger,
- * so a handful of tokens sits comfortably in the middle while anything past two dozen fills the
- * view as usual.
+ * Small graphs get a box grown around their center instead — `(24 / order) ^ 0.35` times larger
+ * (about 2.4× for two tokens, 1.4× for nine), so a handful of tokens sits comfortably in the
+ * middle with room for labels, while anything past two dozen fills the view as usual.
  */
 export function viewerExtent(graph: ViewerGraph): Extent | undefined {
   if (graph.order === 0) return undefined;
@@ -195,7 +195,7 @@ export function viewerExtent(graph: ViewerGraph): Extent | undefined {
     minY = Math.min(minY, attrs.y);
     maxY = Math.max(maxY, attrs.y);
   });
-  const grow = Math.sqrt(Math.max(1, 24 / graph.order));
+  const grow = Math.pow(Math.max(1, 24 / graph.order), 0.35);
   if (grow === 1) return { x: [minX, maxX], y: [minY, maxY] };
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;

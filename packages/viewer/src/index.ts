@@ -1,6 +1,7 @@
 export { mountTokenGraphViewer } from './mount.js';
 export type { TokenGraphViewer, TokenGraphViewerOptions, ViewerSigma } from './mount.js';
 export {
+  baseNodeSize,
   buildViewerGraph,
   categoryOf,
   countTransitiveDependents,

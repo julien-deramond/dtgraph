@@ -1,0 +1,6 @@
+# pnpm workspace configuration.
+# This monorepo is pnpm-only. Install with `pnpm install` at the repo root.
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'examples/*'

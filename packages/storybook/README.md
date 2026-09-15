@@ -1,8 +1,9 @@
 # @dtgraph/storybook
 
 A Storybook addon panel that renders a story's [DTCG](https://www.designtokens.org/tr/2025.10/format/)
-token graph, live, next to Controls/Actions. Built on
-[`@dtgraph/core`](../core#readme).
+token graph, live, next to Controls/Actions: an interactive map you can pan, zoom, search and
+click through, with a detail panel for each token. Built on [`@dtgraph/core`](../core#readme)
+and [`@dtgraph/viewer`](../viewer#readme).
 
 ## Install
 
@@ -23,8 +24,9 @@ const config: StorybookConfig = {
 export default config;
 ```
 
-The addon is framework-agnostic — it only reads story parameters and renders SVG, so it works
-with any Storybook framework (React, Vue, Angular, Svelte, web components, plain HTML, ...).
+The addon is framework-agnostic — it only reads story parameters and renders into its own panel,
+so it works with any Storybook framework (React, Vue, Angular, Svelte, web components, plain
+HTML, ...). The panel follows Storybook's light/dark theme.
 
 ## Story parameter API
 

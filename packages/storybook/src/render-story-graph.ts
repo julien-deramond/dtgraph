@@ -5,7 +5,7 @@ import {
   renderTokenGraphToSvg,
   resolveAliasEdgesAcrossFiles,
 } from '@dtgraph/core';
-import type { NamedTokenTree } from '@dtgraph/core';
+import type { NamedTokenTree, TokenGraph } from '@dtgraph/core';
 
 /**
  * A story's `dtgraph` parameter: a single DTCG document (already-parsed JSON), or multiple —
@@ -17,12 +17,12 @@ export interface DtgraphParameter {
 }
 
 /**
- * Parse, resolve, and render a story's `dtgraph` parameter to an SVG string — entirely
- * in-memory, since story parameters are already JS values in the Storybook manager (no
- * filesystem access needed or attempted). Errors propagate unmodified, same policy as the CLI,
- * playground, and `<TokenGraph>`.
+ * Parse and resolve a story's `dtgraph` parameter into a `TokenGraph` — entirely in-memory,
+ * since story parameters are already JS values in the Storybook manager (no filesystem access
+ * needed or attempted). Errors propagate unmodified, same policy as the CLI, playground, and
+ * `<TokenGraph>`.
  */
-export function renderStoryTokensToSvg(tokens: unknown | unknown[]): string {
+export function buildStoryTokenGraph(tokens: unknown | unknown[]): TokenGraph {
   const documents = Array.isArray(tokens) ? tokens : [tokens];
   const namedTrees: NamedTokenTree[] = documents.map((document, index) => ({
     source: `story-tokens-${index}`,
@@ -30,5 +30,10 @@ export function renderStoryTokensToSvg(tokens: unknown | unknown[]): string {
   }));
   const nodes = namedTrees.flatMap(({ tree }) => flattenTokenTree(tree));
   const edges = resolveAliasEdgesAcrossFiles(namedTrees);
-  return renderTokenGraphToSvg(buildTokenGraph(nodes, edges));
+  return buildTokenGraph(nodes, edges);
+}
+
+/** Parse, resolve, and render a story's `dtgraph` parameter to the static SVG string. */
+export function renderStoryTokensToSvg(tokens: unknown | unknown[]): string {
+  return renderTokenGraphToSvg(buildStoryTokenGraph(tokens));
 }

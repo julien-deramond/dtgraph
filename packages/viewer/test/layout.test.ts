@@ -3,15 +3,24 @@ import { describe, expect, it } from 'vitest';
 import { buildViewerGraph } from '../src/build-graph.js';
 import {
   defaultIterations,
+  dependencyLevels,
+  layoutLayered,
   layoutViewerGraph,
   placeIsolatesAsSatellites,
   viewerExtent,
 } from '../src/layout.js';
 import { SAMPLE, tokenGraphFrom } from './helpers.js';
 
+/** SAMPLE plus enough filler tokens to exceed the small-graph threshold (force layout path). */
+function bigSample(): Record<string, unknown> {
+  const filler: Record<string, unknown> = {};
+  for (let i = 0; i < 30; i++) filler[`f${i}`] = { $value: i };
+  return { ...SAMPLE, filler };
+}
+
 describe('layoutViewerGraph', () => {
   it('gives every node finite coordinates', () => {
-    const graph = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    const graph = buildViewerGraph(tokenGraphFrom(bigSample()));
     layoutViewerGraph(graph);
     graph.forEachNode((_, attrs) => {
       expect(Number.isFinite(attrs.x)).toBe(true);
@@ -20,8 +29,8 @@ describe('layoutViewerGraph', () => {
   });
 
   it('is deterministic', () => {
-    const a = buildViewerGraph(tokenGraphFrom(SAMPLE));
-    const b = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    const a = buildViewerGraph(tokenGraphFrom(bigSample()));
+    const b = buildViewerGraph(tokenGraphFrom(bigSample()));
     layoutViewerGraph(a);
     layoutViewerGraph(b);
     a.forEachNode((node, attrs) => {
@@ -30,7 +39,7 @@ describe('layoutViewerGraph', () => {
   });
 
   it('pulls connected tokens closer together than unrelated ones', () => {
-    const graph = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    const graph = buildViewerGraph(tokenGraphFrom(bigSample()));
     layoutViewerGraph(graph);
     const d = (a: string, b: string) =>
       Math.hypot(
@@ -43,7 +52,7 @@ describe('layoutViewerGraph', () => {
   });
 
   it('places isolated tokens outside the connected layout', () => {
-    const graph = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    const graph = buildViewerGraph(tokenGraphFrom(bigSample()));
     layoutViewerGraph(graph);
     const connected: string[] = [];
     graph.forEachNode((node) => {
@@ -66,11 +75,14 @@ describe('layoutViewerGraph', () => {
   });
 
   it('keeps isolated tokens of one group together, apart from other groups', () => {
+    const filler: Record<string, unknown> = {};
+    for (let i = 0; i < 30; i++) filler[`f${i}`] = { $value: i };
     const graph = buildViewerGraph(
       tokenGraphFrom({
         a: { x: { $value: 1 }, y: { $value: 2 }, z: { $value: 3 } },
         b: { x: { $value: 1 }, y: { $value: 2 } },
         linked: { p: { $value: 1 }, q: { $value: '{linked.p}' } },
+        filler,
       }),
     );
     layoutViewerGraph(graph);
@@ -84,13 +96,13 @@ describe('layoutViewerGraph', () => {
   });
 
   it('lays out a graph with no edges at all without stacking nodes', () => {
-    const graph = buildViewerGraph(
-      tokenGraphFrom({ a: { $value: 1 }, b: { $value: 2 }, c: { $value: 3 } }),
-    );
+    const tokens: Record<string, unknown> = {};
+    for (let i = 0; i < 30; i++) tokens[`t${i}`] = { $value: i };
+    const graph = buildViewerGraph(tokenGraphFrom(tokens));
     layoutViewerGraph(graph);
     const positions = new Set<string>();
     graph.forEachNode((_, attrs) => positions.add(`${attrs.x},${attrs.y}`));
-    expect(positions.size).toBe(3);
+    expect(positions.size).toBe(30);
   });
 
   it('does nothing for an empty graph', () => {
@@ -102,6 +114,38 @@ describe('layoutViewerGraph', () => {
   it('uses fewer iterations for bigger graphs', () => {
     expect(defaultIterations(50)).toBeGreaterThan(defaultIterations(500));
     expect(defaultIterations(500)).toBeGreaterThan(defaultIterations(5000));
+  });
+});
+
+describe('layered layout for small graphs', () => {
+  it('assigns dependency levels from primitives outward', () => {
+    const levels = dependencyLevels(buildViewerGraph(tokenGraphFrom(SAMPLE)));
+    expect(levels.get('color.blue')).toBe(0);
+    expect(levels.get('spacing.md')).toBe(0);
+    expect(levels.get('semantic.primary')).toBe(1);
+    expect(levels.get('button.background')).toBe(2);
+    expect(levels.get('button.border')).toBe(1);
+  });
+
+  it('places consumers to the right of what they reference, without stacking', () => {
+    const graph = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    layoutViewerGraph(graph);
+    const x = (n: string) => graph.getNodeAttribute(n, 'x');
+    expect(x('color.blue')).toBeLessThan(x('semantic.primary'));
+    expect(x('semantic.primary')).toBeLessThan(x('button.background'));
+    const positions = new Set<string>();
+    graph.forEachNode((_, attrs) => positions.add(`${attrs.x},${attrs.y}`));
+    expect(positions.size).toBe(graph.order);
+  });
+
+  it('is what layoutViewerGraph uses up to the small-graph threshold', () => {
+    const graph = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    const layered = buildViewerGraph(tokenGraphFrom(SAMPLE));
+    layoutViewerGraph(graph);
+    layoutLayered(layered);
+    graph.forEachNode((node, attrs) => {
+      expect(layered.getNodeAttributes(node)).toMatchObject({ x: attrs.x, y: attrs.y });
+    });
   });
 });
 

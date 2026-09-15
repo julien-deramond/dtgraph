@@ -1,30 +1,34 @@
 import { DtcgParseError } from '@dtgraph/core';
-import { describe, expect, it } from 'vitest';
+import type { TokenGraph } from '@dtgraph/core';
+import { describe, expect, it, vi } from 'vitest';
 
-import { readFiles, renderFilesToDom, renderTokenFilesToSvg } from '../src/lib/playground.js';
+import {
+  buildTokenGraphFromFiles,
+  createPlayground,
+  readFiles,
+  renderTokenFilesToSvg,
+} from '../src/lib/playground.js';
 import { MAX_FILE_BYTES, UploadTooComplexError } from '../src/lib/upload-guard.js';
 
-describe('renderTokenFilesToSvg', () => {
-  it('renders a single valid token file to SVG', () => {
-    const svg = renderTokenFilesToSvg([
-      {
-        source: 'tokens.json',
-        content: JSON.stringify({
-          color: {
-            brand: { $type: 'color', $value: '#112233' },
-            accent: { $value: '{color.brand}' },
-          },
-        }),
-      },
-    ]);
+const VALID = {
+  source: 'tokens.json',
+  content: JSON.stringify({
+    color: {
+      brand: { $type: 'color', $value: '#112233' },
+      accent: { $value: '{color.brand}' },
+    },
+  }),
+};
 
-    expect(svg).toContain('<svg');
-    expect(svg).toContain('color.brand');
-    expect(svg).toContain('color.accent');
+describe('buildTokenGraphFromFiles', () => {
+  it('parses and resolves a single valid token file', () => {
+    const graph = buildTokenGraphFromFiles([VALID]);
+    expect(graph.nodes.map((node) => node.path.join('.'))).toEqual(['color.brand', 'color.accent']);
+    expect(graph.edges).toHaveLength(1);
   });
 
   it('resolves aliases across multiple files', () => {
-    const svg = renderTokenFilesToSvg([
+    const graph = buildTokenGraphFromFiles([
       {
         source: 'color.json',
         content: JSON.stringify({ color: { brand: { $type: 'color', $value: '#112233' } } }),
@@ -34,9 +38,8 @@ describe('renderTokenFilesToSvg', () => {
         content: JSON.stringify({ color: { accent: { $value: '{color.brand}' } } }),
       },
     ]);
-
-    expect(svg).toContain('color.brand');
-    expect(svg).toContain('color.accent');
+    expect(graph.nodes).toHaveLength(2);
+    expect(graph.getOutgoingEdges(['color', 'accent'])).toHaveLength(1);
   });
 
   it('propagates a dangling-alias error from core unmodified', () => {
@@ -47,21 +50,30 @@ describe('renderTokenFilesToSvg', () => {
       },
     ];
 
-    expect(() => renderTokenFilesToSvg(files)).toThrow(DtcgParseError);
-    expect(() => renderTokenFilesToSvg(files)).toThrow(/does not resolve to any known token/);
+    expect(() => buildTokenGraphFromFiles(files)).toThrow(DtcgParseError);
+    expect(() => buildTokenGraphFromFiles(files)).toThrow(/does not resolve to any known token/);
   });
 
   it('propagates a JSON syntax error unmodified', () => {
     expect(() =>
-      renderTokenFilesToSvg([{ source: 'tokens.json', content: '{ not valid json' }]),
+      buildTokenGraphFromFiles([{ source: 'tokens.json', content: '{ not valid json' }]),
     ).toThrow(SyntaxError);
   });
 
   it('rejects an oversized upload before it ever reaches @dtgraph/core', () => {
     const content = JSON.stringify({ padding: 'x'.repeat(MAX_FILE_BYTES) });
-    expect(() => renderTokenFilesToSvg([{ source: 'big.json', content }])).toThrow(
+    expect(() => buildTokenGraphFromFiles([{ source: 'big.json', content }])).toThrow(
       UploadTooComplexError,
     );
+  });
+});
+
+describe('renderTokenFilesToSvg', () => {
+  it('renders the static SVG export', () => {
+    const svg = renderTokenFilesToSvg([VALID]);
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('color.brand');
+    expect(svg).toContain('color.accent');
   });
 });
 
@@ -73,54 +85,112 @@ describe('readFiles', () => {
   });
 });
 
-describe('renderFilesToDom', () => {
-  function makeElements() {
-    return { output: document.createElement('div'), error: document.createElement('p') };
+describe('createPlayground', () => {
+  function setup() {
+    const els = { output: document.createElement('div'), error: document.createElement('p') };
+    const destroy = vi.fn();
+    const mount = vi.fn((container: HTMLElement, graph: TokenGraph) => {
+      const marker = document.createElement('div');
+      marker.dataset.tokens = String(graph.nodes.length);
+      container.appendChild(marker);
+      return { destroy };
+    });
+    return { els, mount, destroy, playground: createPlayground(els, mount) };
   }
 
-  it('injects the rendered SVG into the output element on success', () => {
-    const els = makeElements();
-    renderFilesToDom(
-      [
-        {
-          source: 'tokens.json',
-          content: JSON.stringify({ color: { brand: { $type: 'color', $value: '#112233' } } }),
-        },
-      ],
-      els,
-    );
+  it('mounts the resolved graph into the output element on success', () => {
+    const { els, mount, playground } = setup();
 
-    expect(els.output.innerHTML).toContain('<svg');
+    expect(playground.load([VALID])).toBe(true);
+
+    expect(mount).toHaveBeenCalledTimes(1);
+    expect(mount.mock.calls[0][0]).toBe(els.output);
+    expect(els.output.querySelector('[data-tokens="2"]')).not.toBeNull();
+    expect(els.error.hidden).toBe(true);
     expect(els.error.textContent).toBe('');
+    expect(playground.graph?.nodes).toHaveLength(2);
+    expect(playground.files).toEqual([VALID]);
   });
 
-  it('shows the error message as plain text and clears output on failure', () => {
-    const els = makeElements();
-    els.output.innerHTML = '<svg>stale</svg>';
+  it('tears down the previous graph before mounting the next one', () => {
+    const { els, mount, destroy, playground } = setup();
+    playground.load([VALID]);
+    playground.load([VALID]);
 
-    renderFilesToDom([{ source: 'tokens.json', content: '{ not valid json' }], els);
+    expect(destroy).toHaveBeenCalledTimes(1);
+    expect(mount).toHaveBeenCalledTimes(2);
+    expect(els.output.children).toHaveLength(1);
+  });
 
-    expect(els.output.innerHTML).toBe('');
+  it('shows the error as plain text and keeps what was on screen on failure', () => {
+    const { els, destroy, playground } = setup();
+    playground.load([VALID]);
+
+    expect(playground.load([{ source: 'tokens.json', content: '{ not valid json' }])).toBe(false);
+
+    expect(els.error.hidden).toBe(false);
     expect(els.error.textContent).toContain('JSON');
+    expect(destroy).not.toHaveBeenCalled();
+    expect(els.output.children).toHaveLength(1);
+    expect(playground.files).toEqual([VALID]);
   });
 
-  it('never lets script-laced token content become live markup in the DOM', () => {
-    const els = makeElements();
-    const maliciousSegment = '<script>window.__pwned = true</script>';
-    renderFilesToDom(
-      [
-        {
-          source: 'tokens.json',
-          content: JSON.stringify({
-            color: { [maliciousSegment]: { $type: 'color', $value: '#112233' } },
-          }),
-        },
-      ],
-      els,
-    );
+  it('remounts the current graph with the same output element', () => {
+    const { els, mount, destroy, playground } = setup();
+    playground.load([VALID]);
+    playground.remount();
 
-    expect(els.output.querySelectorAll('script')).toHaveLength(0);
-    expect(els.output.innerHTML).not.toContain('<script>window.__pwned = true</script>');
-    expect(els.output.textContent).toContain(maliciousSegment);
+    expect(destroy).toHaveBeenCalledTimes(1);
+    expect(mount).toHaveBeenCalledTimes(2);
+    expect(mount.mock.calls[1][0]).toBe(els.output);
+    expect(mount.mock.calls[1][1]).toBe(playground.graph);
+  });
+
+  it('exports the static SVG for the current graph only', () => {
+    const { playground } = setup();
+    expect(playground.exportSvg()).toBeUndefined();
+    playground.load([VALID]);
+    expect(playground.exportSvg()).toContain('<svg');
+  });
+
+  it('never lets script-laced token content become live markup, in errors or exports', () => {
+    const { els, playground } = setup();
+    const maliciousSegment = '<script>window.__pwned = true</script>';
+
+    // Error messages quote the offending token path.
+    playground.load([
+      {
+        source: 'tokens.json',
+        content: JSON.stringify({
+          color: { [maliciousSegment]: { $value: '{color.nonexistent}' } },
+        }),
+      },
+    ]);
+    expect(els.error.textContent).toContain(maliciousSegment);
+    expect(els.error.querySelectorAll('script')).toHaveLength(0);
+
+    // The SVG export escapes it.
+    playground.load([
+      {
+        source: 'tokens.json',
+        content: JSON.stringify({
+          color: { [maliciousSegment]: { $type: 'color', $value: '#112233' } },
+        }),
+      },
+    ]);
+    const svg = playground.exportSvg() ?? '';
+    expect(svg).not.toContain('<script>');
+    expect(svg).toContain('&lt;script&gt;');
+  });
+
+  it('destroy clears everything', () => {
+    const { els, destroy, playground } = setup();
+    playground.load([VALID]);
+    playground.destroy();
+
+    expect(destroy).toHaveBeenCalledTimes(1);
+    expect(els.output.children).toHaveLength(0);
+    expect(playground.graph).toBeUndefined();
+    expect(playground.files).toEqual([]);
   });
 });

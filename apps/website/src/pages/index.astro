@@ -2,89 +2,383 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 ---
 
-<SiteLayout title="Playground">
-  <h1>dtgraph playground</h1>
-  <p>
-    Drop one or more <a href="https://www.designtokens.org/tr/2025.10/format/">DTCG</a> token
-    files below (or paste JSON) to see the resolved token graph. Everything runs in your
-    browser — files are never uploaded anywhere.
-  </p>
+<SiteLayout title="Playground" fullBleed>
+  <div class="playground">
+    <div class="toolbar" role="toolbar" aria-label="Playground controls">
+      <div class="toolbar__group">
+        <button id="open-files" type="button" class="btn btn--primary">Open files…</button>
+        <input id="file-input" type="file" accept="application/json,.json" multiple hidden />
+        <button id="paste-open" type="button" class="btn">Paste JSON</button>
+        <button id="load-sample" type="button" class="btn btn--ghost">Load sample</button>
+      </div>
+      <div class="toolbar__status">
+        <span id="file-chips" class="chips"></span>
+        <span id="stats" class="stats"></span>
+      </div>
+      <div class="toolbar__group">
+        <div class="segmented" role="group" aria-label="Color tokens by">
+          <span class="segmented__label">Color by</span>
+          <button type="button" data-color-by="group" aria-pressed="true">Group</button>
+          <button type="button" data-color-by="type" aria-pressed="false">Type</button>
+        </div>
+        <button id="theme-toggle" type="button" class="btn" aria-pressed="true">Dark</button>
+        <button id="fit" type="button" class="btn">Fit</button>
+        <button id="export-svg" type="button" class="btn">Export SVG</button>
+      </div>
+    </div>
 
-  <div id="drop-zone" class="drop-zone" tabindex="0">
-    <p>Drop DTCG JSON file(s) here, or</p>
-    <input id="file-input" type="file" accept="application/json,.json" multiple />
+    <p id="error-output" class="error" role="alert" hidden></p>
+
+    <div class="stage">
+      <div id="graph-output" class="canvas"></div>
+      <div class="hint" aria-hidden="true">
+        Drag to pan · Scroll to zoom · Hover to spotlight · Double-click to dive in · Drop DTCG
+        files anywhere
+      </div>
+      <div id="drop-overlay" class="drop-overlay" hidden>
+        <div class="drop-overlay__card">Drop DTCG JSON file(s) to render them</div>
+      </div>
+    </div>
+
+    <dialog id="paste-dialog" class="dialog">
+      <form method="dialog">
+        <h2>Paste DTCG JSON</h2>
+        <textarea
+          id="paste-input"
+          rows="14"
+          spellcheck="false"
+          placeholder={'{\n  "color": {\n    "brand": { "$type": "color", "$value": "#3311ff" },\n    "accent": { "$value": "{color.brand}" }\n  }\n}'}
+        ></textarea>
+        <div class="dialog__actions">
+          <button type="submit" value="cancel" class="btn">Cancel</button>
+          <button type="submit" value="render" class="btn btn--primary">Render</button>
+        </div>
+      </form>
+    </dialog>
   </div>
 
-  <details>
-    <summary>Or paste JSON</summary>
-    <textarea
-      id="paste-input"
-      rows="10"
-      placeholder={'{\n  "color": {\n    "brand": { "$type": "color", "$value": "#3311ff" }\n  }\n}'}
-    ></textarea>
-    <button id="paste-render" type="button">Render pasted JSON</button>
-  </details>
-
-  <p id="error-output" class="error" role="alert"></p>
-  <div id="graph-output"></div>
-
   <style>
-    .drop-zone {
-      border: 2px dashed #9ca3af;
+    .playground {
+      --line: #e5e7eb;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1.25rem;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.8125rem;
+    }
+    .toolbar__group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .toolbar__status {
+      display: flex;
+      flex: 1 1 12rem;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+      color: var(--muted);
+    }
+    .chips {
+      display: flex;
+      gap: 0.35rem;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .chips > span {
+      overflow: hidden;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #374151;
+      background: #f9fafb;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .stats {
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .btn,
+    .segmented button {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--line);
       border-radius: 0.5rem;
-      padding: 2rem;
-      text-align: center;
-      margin: 1.5rem 0;
+      color: inherit;
+      background: #ffffff;
+      font: inherit;
+      cursor: pointer;
     }
-    .drop-zone.drag-over {
-      border-color: #2563eb;
-      background: #eff6ff;
+    .btn:hover,
+    .segmented button:hover {
+      background: #f3f4f6;
     }
-    textarea {
-      width: 100%;
-      max-width: 40rem;
-      font-family: monospace;
-      display: block;
-      margin: 0.75rem 0;
+    .btn:focus-visible,
+    .segmented button:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .btn--primary {
+      border-color: var(--accent);
+      color: #ffffff;
+      background: var(--accent);
+    }
+    .btn--primary:hover {
+      background: #1d4ed8;
+    }
+    .btn--ghost {
+      border-color: transparent;
+    }
+    .btn[aria-pressed='false'] {
+      color: var(--muted);
+    }
+    .segmented {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .segmented__label {
+      color: var(--muted);
+    }
+    .segmented button {
+      border-radius: 0;
+    }
+    .segmented button:nth-of-type(1) {
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+    .segmented button:nth-of-type(2) {
+      margin-left: -1px;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+    .segmented button[aria-pressed='true'] {
+      color: #ffffff;
+      background: #18181b;
+      border-color: #18181b;
     }
     .error {
+      margin: 0;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid #fecaca;
       color: #b91c1c;
+      background: #fef2f2;
+      font-size: 0.875rem;
       white-space: pre-wrap;
+    }
+    .stage {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 320px;
+    }
+    .canvas {
+      position: absolute;
+      inset: 0;
+    }
+    .hint {
+      position: absolute;
+      left: 0.75rem;
+      bottom: 0.75rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.7);
+      background: rgba(0, 0, 0, 0.45);
+      font-size: 0.75rem;
+      pointer-events: none;
+    }
+    .canvas[data-theme='light'] + .hint {
+      color: rgba(0, 0, 0, 0.6);
+      background: rgba(255, 255, 255, 0.7);
+    }
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px dashed var(--accent);
+      background: rgba(37, 99, 235, 0.12);
+      pointer-events: none;
+    }
+    .drop-overlay[hidden] {
+      display: none;
+    }
+    .drop-overlay__card {
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      color: #ffffff;
+      background: var(--accent);
+      font-weight: 600;
+    }
+    .dialog {
+      width: min(40rem, 90vw);
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+    .dialog::backdrop {
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .dialog h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+    }
+    .dialog textarea {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem;
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      font-family: ui-monospace, monospace;
+      font-size: 0.8125rem;
+    }
+    .dialog__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
     }
   </style>
 
   <script>
-    import { readFiles, renderFilesToDom } from '../lib/playground.js';
+    import { mountTokenGraphViewer } from '@dtgraph/viewer';
+    import type { ColorBy, TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
+    import '@dtgraph/viewer/style.css';
 
-    const dropZone = document.getElementById('drop-zone') as HTMLElement;
-    const fileInput = document.getElementById('file-input') as HTMLInputElement;
-    const pasteInput = document.getElementById('paste-input') as HTMLTextAreaElement;
-    const pasteButton = document.getElementById('paste-render') as HTMLButtonElement;
-    const output = document.getElementById('graph-output') as HTMLElement;
-    const error = document.getElementById('error-output') as HTMLElement;
+    import sample from '../samples/design-system.json';
+    import { createPlayground, readFiles } from '../lib/playground.js';
 
+    const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
+    const output = $<HTMLElement>('graph-output');
+    const error = $<HTMLElement>('error-output');
+    const fileInput = $<HTMLInputElement>('file-input');
+    const chips = $<HTMLElement>('file-chips');
+    const stats = $<HTMLElement>('stats');
+    const dropOverlay = $<HTMLElement>('drop-overlay');
+    const pasteDialog = $<HTMLDialogElement>('paste-dialog');
+    const pasteInput = $<HTMLTextAreaElement>('paste-input');
+    const themeToggle = $<HTMLButtonElement>('theme-toggle');
+    const colorButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('button[data-color-by]'),
+    );
+
+    let theme: ViewerTheme = 'dark';
+    let colorBy: ColorBy = 'group';
+    let viewer: TokenGraphViewer | undefined;
+
+    const playground = createPlayground({ output, error }, (container, graph) => {
+      viewer = mountTokenGraphViewer(container, graph, { theme, colorBy });
+      return viewer;
+    });
+
+    const format = new Intl.NumberFormat();
+    function reflect(): void {
+      // File names are untrusted: build chips with textContent only.
+      chips.replaceChildren(
+        ...playground.files.map((file) => {
+          const chip = document.createElement('span');
+          chip.textContent = file.source;
+          chip.title = file.source;
+          return chip;
+        }),
+      );
+      const graph = playground.graph;
+      stats.textContent =
+        graph === undefined
+          ? ''
+          : `${format.format(graph.nodes.length)} tokens · ${format.format(graph.edges.length)} edges`;
+    }
+
+    function load(files: { source: string; content: string }[]): void {
+      playground.load(files);
+      reflect();
+    }
+
+    // --- Inputs -------------------------------------------------------------------------------
+    $('open-files').addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async () => {
       if (fileInput.files === null || fileInput.files.length === 0) return;
-      renderFilesToDom(await readFiles(fileInput.files), { output, error });
+      load(await readFiles(fileInput.files));
+      fileInput.value = '';
     });
 
-    dropZone.addEventListener('dragover', (event) => {
-      event.preventDefault();
-      dropZone.classList.add('drag-over');
+    $('load-sample').addEventListener('click', () => {
+      load([{ source: 'design-system.json', content: JSON.stringify(sample) }]);
     });
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('drag-over');
+
+    $('paste-open').addEventListener('click', () => {
+      pasteDialog.showModal();
+      pasteInput.focus();
     });
-    dropZone.addEventListener('drop', async (event) => {
+    pasteDialog.addEventListener('close', () => {
+      if (pasteDialog.returnValue !== 'render') return;
+      load([{ source: 'pasted.json', content: pasteInput.value }]);
+    });
+
+    // Drop anywhere on the page.
+    let dragDepth = 0;
+    document.addEventListener('dragenter', (event) => {
+      if (!event.dataTransfer?.types.includes('Files')) return;
+      dragDepth += 1;
+      dropOverlay.hidden = false;
+    });
+    document.addEventListener('dragleave', () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) dropOverlay.hidden = true;
+    });
+    document.addEventListener('dragover', (event) => event.preventDefault());
+    document.addEventListener('drop', async (event) => {
       event.preventDefault();
-      dropZone.classList.remove('drag-over');
+      dragDepth = 0;
+      dropOverlay.hidden = true;
       const files = event.dataTransfer?.files;
       if (files === undefined || files.length === 0) return;
-      renderFilesToDom(await readFiles(files), { output, error });
+      load(await readFiles(files));
     });
 
-    pasteButton.addEventListener('click', () => {
-      renderFilesToDom([{ source: 'pasted.json', content: pasteInput.value }], { output, error });
+    // --- Display options ------------------------------------------------------------------------
+    for (const button of colorButtons) {
+      button.addEventListener('click', () => {
+        colorBy = button.dataset.colorBy as ColorBy;
+        for (const other of colorButtons) {
+          other.setAttribute('aria-pressed', String(other === button));
+        }
+        playground.remount();
+      });
+    }
+
+    themeToggle.addEventListener('click', () => {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      themeToggle.textContent = theme === 'dark' ? 'Dark' : 'Light';
+      themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+      playground.remount();
     });
+
+    $('fit').addEventListener('click', () => viewer?.fit());
+
+    $('export-svg').addEventListener('click', () => {
+      const svg = playground.exportSvg();
+      if (svg === undefined) return;
+      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'token-graph.svg';
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // --- Land with something on screen -------------------------------------------------------
+    load([{ source: 'design-system.json', content: JSON.stringify(sample) }]);
   </script>
 </SiteLayout>

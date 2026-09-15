@@ -38,7 +38,7 @@ class FakeSigma {
   refresh() {
     this.refreshed += 1;
   }
-  resize() {
+  scheduleRefresh() {
     this.resized += 1;
   }
   kill() {

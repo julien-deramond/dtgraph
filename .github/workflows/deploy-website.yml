@@ -6,6 +6,8 @@ on:
     paths:
       - apps/website/**
       - packages/core/**
+      - packages/viewer/**
+      - packages/mdx/**
       - .github/workflows/deploy-website.yml
   workflow_dispatch:
 
@@ -39,11 +41,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build @dtgraph/core
-        run: pnpm --filter @dtgraph/core run build
-
-      - name: Build website
-        run: pnpm --filter website run build
+      # "website..." selects the website plus every workspace package it depends on (core, viewer,
+      # mdx), built in topological order; --if-present skips packages without a build script.
+      - name: Build website and its workspace dependencies
+        run: pnpm --filter "website..." --if-present run build
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

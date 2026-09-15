@@ -109,10 +109,12 @@ export function mountTokenGraphViewer(
     zoomTo(node);
   });
 
-  // Sigma only watches window resizes; follow the container too (panels, split panes, ...).
+  // Sigma only watches window resizes; follow the container too (panels, split panes, a banner
+  // appearing above the map, ...). `scheduleRefresh` is what Sigma's own window handler calls:
+  // a bare `resize()` re-sizes (and thereby clears) the canvases without redrawing them.
   let observer: ResizeObserver | undefined;
   if (typeof ResizeObserver !== 'undefined') {
-    observer = new ResizeObserver(() => sigma.resize());
+    observer = new ResizeObserver(() => sigma.scheduleRefresh());
     observer.observe(container);
   }
 

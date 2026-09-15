@@ -50,6 +50,9 @@ importers:
       '@dtgraph/mdx':
         specifier: workspace:^
         version: link:../../packages/mdx
+      '@dtgraph/viewer':
+        specifier: workspace:^
+        version: link:../../packages/viewer
       astro:
         specifier: 7.3.2
         version: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.5.1)(yaml@2.9.1)

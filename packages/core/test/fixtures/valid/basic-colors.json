@@ -1,0 +1,13 @@
+{
+  "colors": {
+    "$type": "color",
+    "$description": "Core color palette",
+    "red": {
+      "$value": "#ff0000",
+      "$description": "A pure red"
+    },
+    "blue": {
+      "$value": "#0000ff"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { Command } from 'commander';
 
 import { registerRenderCommand } from './commands/render.js';
+import { registerValidateCommand } from './commands/validate.js';
 
 const require = createRequire(import.meta.url);
 const packageJson = require('../package.json') as { version: string; description: string };
@@ -15,5 +16,6 @@ export function createProgram(): Command {
   const program = new Command();
   program.name('dtgraph').description(packageJson.description).version(packageJson.version);
   registerRenderCommand(program);
+  registerValidateCommand(program);
   return program;
 }

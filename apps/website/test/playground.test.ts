@@ -228,6 +228,23 @@ describe('resolver files in the playground', () => {
     content: JSON.stringify({ semantic: { bg: { $type: 'color', $value: '{color.a}' } } }),
   };
   const UNRELATED = { source: 'unrelated.json', content: JSON.stringify({}) };
+  /** The same resolver with the `default` dropped — valid per spec, but unresolvable unasked. */
+  const NO_DEFAULT = {
+    source: 'ds.resolver.json',
+    content: JSON.stringify({
+      version: '2025.10',
+      sets: { base: { sources: [{ $ref: 'base.json' }] } },
+      modifiers: {
+        theme: {
+          contexts: {
+            light: [{ $ref: 'themes/light.json' }],
+            dark: [{ $ref: 'themes/dark.json' }],
+          },
+        },
+      },
+      resolutionOrder: [{ $ref: '#/sets/base' }, { $ref: '#/modifiers/theme' }],
+    }),
+  };
 
   function setup() {
     const els = { output: document.createElement('div'), error: document.createElement('p') };
@@ -276,6 +293,40 @@ describe('resolver files in the playground', () => {
     );
     expect(playground.graph?.nodes).toHaveLength(2);
     expect(playground.resolver).toBeUndefined();
+  });
+
+  it('offers the modifiers instead of dead-ending when one has no default', () => {
+    const { els, playground } = setup();
+    expect(playground.load([VALID])).toBe(true);
+
+    expect(playground.load([NO_DEFAULT, BASE, LIGHT, DARK])).toBe(false);
+
+    expect(els.error.hidden).toBe(false);
+    expect(els.error.textContent).toMatch(
+      /Modifier "theme" has no default context and none was given — choose one of: light, dark/,
+    );
+    // Nothing resolved, so the previous graph goes rather than sitting under the new file chips.
+    expect(playground.graph).toBeUndefined();
+    expect(els.output.children).toHaveLength(0);
+    expect(playground.files).toEqual([NO_DEFAULT, BASE, LIGHT, DARK]);
+    expect(playground.resolver).toEqual({
+      source: 'ds.resolver.json',
+      modifiers: [{ name: 'theme', contexts: ['light', 'dark'], selected: undefined }],
+      sources: [],
+      ignored: [],
+    });
+  });
+
+  it('builds once the missing context is chosen', () => {
+    const { els, playground } = setup();
+    playground.load([NO_DEFAULT, BASE, LIGHT, DARK]);
+
+    expect(playground.setContext('theme', 'dark')).toBe(true);
+
+    expect(els.error.hidden).toBe(true);
+    expect(playground.graph?.getOutgoingEdges(['semantic', 'bg'])[0].to).toEqual(['color', 'a']);
+    expect(playground.resolver?.modifiers[0].selected).toBe('dark');
+    expect(playground.resolver?.sources).toEqual(['base.json', 'dark.json']);
   });
 
   it('forgets the resolver when plain token files are loaded next', () => {

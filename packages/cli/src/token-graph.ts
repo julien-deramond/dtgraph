@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import { buildTokenGraphFromDocuments } from '@dtgraph/core';
+import { MissingResolverContextsError, buildTokenGraphFromDocuments } from '@dtgraph/core';
 import type { ResolverInput, TokenGraphBuild } from '@dtgraph/core';
 
 export interface TokenFileInput {
@@ -58,4 +58,18 @@ export function loadAndResolveTokenFiles(
     document: JSON.parse(content) as unknown,
   }));
   return buildTokenGraphFromDocuments(documents, { input: options.context });
+}
+
+/**
+ * The `--context` flags that would unblock a resolver rejected for want of a context, ready to
+ * paste, with each modifier's choices spelled out. Undefined for every other kind of error: the
+ * CLI prints this under the message only when it can actually help.
+ */
+export function describeContextHint(error: unknown): string | undefined {
+  if (!(error instanceof MissingResolverContextsError)) return undefined;
+  const contextsOf = (name: string): string[] =>
+    error.modifiers.find((modifier) => modifier.name === name)?.contexts ?? [];
+  const flags = error.missing.map((name) => `--context ${name}=${contextsOf(name)[0]}`).join(' ');
+  const choices = error.missing.map((name) => `${name}: ${contextsOf(name).join(', ')}`).join('; ');
+  return `Hint: add ${flags} (${choices})`;
 }

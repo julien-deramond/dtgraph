@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { formatValidateSummary, validateTokenFiles } from '../src/commands/validate.js';
 import { renderTokenFilesToSvg } from '../src/commands/render.js';
 import { createProgram } from '../src/program.js';
-import { parseContextOptions } from '../src/token-graph.js';
+import { describeContextHint, parseContextOptions } from '../src/token-graph.js';
 
 const RESOLVER = {
   version: '2025.10',
@@ -59,6 +59,29 @@ describe('parseContextOptions', () => {
     expect(() => parseContextOptions(['dark'])).toThrow(/Invalid --context value "dark"/);
     expect(() => parseContextOptions(['theme='])).toThrow(/expected <modifier>=<context>/);
     expect(() => parseContextOptions(['=dark'])).toThrow(/expected <modifier>=<context>/);
+  });
+});
+
+const NO_DEFAULT_FILES = [
+  {
+    source: 'ds.resolver.json',
+    content: JSON.stringify({
+      ...RESOLVER,
+      modifiers: { theme: { contexts: RESOLVER.modifiers.theme.contexts } },
+    }),
+  },
+  ...FILES.slice(1),
+];
+
+describe('describeContextHint', () => {
+  it('spells out the --context flags that would unblock the run', () => {
+    const result = validateTokenFiles(NO_DEFAULT_FILES);
+    expect(result.error?.hint).toBe('Hint: add --context theme=light (theme: light, dark)');
+  });
+
+  it('says nothing for any other error', () => {
+    expect(describeContextHint(new Error('boom'))).toBeUndefined();
+    expect(validateTokenFiles(FILES, { context: { theme: 'sepia' } }).error?.hint).toBeUndefined();
   });
 });
 
@@ -159,6 +182,22 @@ describe('dtgraph CLI with a resolver on disk (end-to-end)', () => {
       expect(process.exitCode).toBeUndefined();
     } finally {
       writeSpy.mockRestore();
+      process.exitCode = undefined;
+    }
+  });
+
+  it('validate prints the context hint under the error when a modifier has no default', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await writeFile(join(dir, 'ds.resolver.json'), NO_DEFAULT_FILES[0].content);
+    try {
+      await createProgram().parseAsync(['node', 'dtgraph', 'validate', ...paths()]);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/Modifier "theme" has no default context/),
+      );
+      expect(errorSpy).toHaveBeenCalledWith('Hint: add --context theme=light (theme: light, dark)');
+      expect(process.exitCode).toBe(1);
+    } finally {
+      errorSpy.mockRestore();
       process.exitCode = undefined;
     }
   });

@@ -1,4 +1,5 @@
-export { DtcgParseError } from './errors.js';
+export { DtcgParseError, MissingResolverContextsError } from './errors.js';
+export type { ResolverModifierChoice } from './errors.js';
 export { buildTokenGraph } from './graph.js';
 export { flattenTokenTree, parseTokenTree } from './parse.js';
 export { renderTokenGraphToSvg } from './render.js';
@@ -14,6 +15,7 @@ export {
   buildTokenGraphFromDocuments,
   buildTokenGraphFromResolver,
   isResolverDocument,
+  listResolverModifiers,
   parseResolverDocument,
 } from './resolver.js';
 export type {

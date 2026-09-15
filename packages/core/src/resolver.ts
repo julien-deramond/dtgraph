@@ -1,4 +1,5 @@
-import { DtcgParseError } from './errors.js';
+import { DtcgParseError, MissingResolverContextsError } from './errors.js';
+import type { ResolverModifierChoice } from './errors.js';
 import { buildTokenGraph } from './graph.js';
 import { flattenTokenTree, parseTokenTree } from './parse.js';
 import { mergeTokenTreesWithOverrides, resolveAliasEdgesAcrossFiles } from './resolve.js';
@@ -416,6 +417,19 @@ export interface ResolverResolution {
   sources: string[];
 }
 
+/**
+ * Every modifier a resolver declares, reduced to what a caller needs to choose between: the
+ * name, the context names, and the default if there is one. Same order and same inline-modifier
+ * handling as {@link collectModifiers}.
+ */
+export function listResolverModifiers(resolver: ResolverDocument): ResolverModifierChoice[] {
+  return Object.values(collectModifiers(resolver)).map((modifier) => ({
+    name: modifier.name,
+    contexts: Object.keys(modifier.contexts),
+    ...(modifier.default === undefined ? {} : { default: modifier.default }),
+  }));
+}
+
 function collectModifiers(resolver: ResolverDocument): Record<string, ResolverModifier> {
   const all: Record<string, ResolverModifier> = { ...resolver.modifiers };
   for (const entry of resolver.resolutionOrder) {
@@ -437,9 +451,14 @@ function collectModifiers(resolver: ResolverDocument): Record<string, ResolverMo
 /**
  * Pick one context per modifier from `input` (falling back to each modifier's `default`),
  * rejecting inputs that name an unknown modifier or context and modifiers left without a
- * context.
+ * context. Modifiers left without one are collected and reported together, so a caller asking
+ * the user to choose only has to ask once.
  */
-function selectContexts(resolver: ResolverDocument, input: ResolverInput): Record<string, string> {
+function selectContexts(
+  resolver: ResolverDocument,
+  input: ResolverInput,
+  resolverSource?: string,
+): Record<string, string> {
   const modifiers = collectModifiers(resolver);
 
   for (const [name, context] of Object.entries(input)) {
@@ -465,16 +484,22 @@ function selectContexts(resolver: ResolverDocument, input: ResolverInput): Recor
   }
 
   const contexts: Record<string, string> = {};
+  const missing: string[] = [];
   for (const modifier of Object.values(modifiers)) {
     const selected = input[modifier.name] ?? modifier.default;
     if (selected === undefined) {
-      throw new DtcgParseError(
-        `Modifier "${modifier.name}" has no default context and none was given — choose one of: ${Object.keys(modifier.contexts).join(', ')}`,
-        ['modifiers', modifier.name],
-        SPEC.inputs,
-      );
+      missing.push(modifier.name);
+      continue;
     }
     contexts[modifier.name] = selected;
+  }
+  if (missing.length > 0) {
+    throw new MissingResolverContextsError(
+      listResolverModifiers(resolver),
+      missing,
+      SPEC.inputs,
+      resolverSource,
+    );
   }
   return contexts;
 }
@@ -663,7 +688,7 @@ export function buildTokenGraphFromResolver(
   options: BuildTokenGraphFromResolverOptions,
 ): ResolverResolution {
   const { resolver, resolverSource, files } = options;
-  const contexts = selectContexts(resolver, options.input ?? {});
+  const contexts = selectContexts(resolver, options.input ?? {}, options.resolverSource);
 
   const state: FlattenState = { resolver, resolverSource, files, trees: [], setStack: [] };
   resolver.resolutionOrder.forEach((entry, index) => {

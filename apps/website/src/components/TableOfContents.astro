@@ -1,0 +1,99 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+export interface Props {
+  headings: MarkdownHeading[];
+}
+
+/** Second- and third-level headings only: the h1 is the page title, deeper levels are noise. */
+const items = Astro.props.headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{
+  items.length > 0 && (
+    <nav class="toc" aria-labelledby="toc-title" data-toc>
+      <p class="toc__title" id="toc-title">
+        On this page
+      </p>
+      <ul>
+        {items.map((heading) => (
+          <li class:list={[`toc__depth-${heading.depth}`]}>
+            <a href={`#${heading.slug}`}>{heading.text}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  .toc__title {
+    margin: 0 0 0.5rem;
+    color: var(--fg-strong);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--line);
+  }
+  .toc a {
+    display: block;
+    margin-left: -1px;
+    padding: 0.25rem 0.75rem;
+    border-left: 1px solid transparent;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+  .toc__depth-3 a {
+    padding-left: 1.5rem;
+  }
+  .toc a:hover {
+    color: var(--fg);
+  }
+  .toc a[aria-current='true'] {
+    border-left-color: var(--accent);
+    color: var(--accent-soft-fg);
+  }
+</style>
+
+<script>
+  // Mark the heading currently scrolled into view. Purely progressive: the list works as
+  // plain anchors without it.
+  for (const toc of document.querySelectorAll<HTMLElement>('[data-toc]')) {
+    const links = new Map<string, HTMLAnchorElement>();
+    for (const link of toc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')) {
+      links.set(decodeURIComponent(link.hash.slice(1)), link);
+    }
+    const headings = [...links.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((heading): heading is HTMLElement => heading !== null);
+    if (headings.length === 0) continue;
+
+    let active: HTMLAnchorElement | undefined;
+    const activate = (id: string): void => {
+      const link = links.get(id);
+      if (link === undefined || link === active) return;
+      active?.removeAttribute('aria-current');
+      link.setAttribute('aria-current', 'true');
+      active = link;
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) activate(entry.target.id);
+        }
+      },
+      // Fire when a heading crosses the top quarter of the viewport, below the sticky header.
+      { rootMargin: '-64px 0px -75% 0px', threshold: 0 },
+    );
+    for (const heading of headings) observer.observe(heading);
+    activate(headings[0].id);
+  }
+</script>

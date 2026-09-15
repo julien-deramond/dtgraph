@@ -1,8 +1,7 @@
 ---
 title: CLI reference
 description: Every dtgraph CLI command, flag, and exit code.
-sidebar:
-  order: 3
+order: 4
 ---
 
 Install with `npm install --global dtgraph`, or run without installing via `npx dtgraph ...`.

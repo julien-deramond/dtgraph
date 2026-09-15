@@ -1,8 +1,7 @@
 ---
 title: Getting started
 description: Two ways to start using dtgraph — the playground, or the CLI.
-sidebar:
-  order: 1
+order: 1
 ---
 
 ## Option 1: the playground (no install)

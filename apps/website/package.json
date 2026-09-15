@@ -2,7 +2,7 @@
   "name": "website",
   "private": true,
   "version": "0.0.0",
-  "description": "dtgraph website: a DTCG token graph playground at / and docs at /docs",
+  "description": "dtgraph website: a DTCG token graph playground at / and docs at /docs, on one shared Astro layout",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@astrojs/mdx": "8.0.1",
-    "@astrojs/starlight": "0.42.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/mdx": "workspace:^",
     "@dtgraph/viewer": "workspace:^",

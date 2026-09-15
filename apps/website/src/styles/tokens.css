@@ -1,0 +1,90 @@
+/*
+ * dtgraph's own design tokens — the single palette, type scale, radii and shadows shared by
+ * every surface of the site: the playground (src/pages/index.astro), the docs
+ * (src/layouts/DocsLayout.astro) and the chrome around both (src/layouts/SiteLayout.astro).
+ *
+ * Each color is a light-dark() pair, so one declaration covers both themes and there is no
+ * second block to keep in sync. Which half applies follows the element's color-scheme:
+ * `<html data-theme="light|dark">` when the header's theme toggle (src/components/ThemeToggle.astro)
+ * has set it, and the system's prefers-color-scheme otherwise — with no JavaScript at all the
+ * site still renders in the system theme.
+ */
+:root {
+  color-scheme: light dark;
+
+  /* Surfaces */
+  --bg: light-dark(#ffffff, #17181c);
+  --surface: light-dark(#ffffff, #23262f);
+  --surface-muted: light-dark(#f9fafb, #2b2e38);
+  --surface-sunken: light-dark(#f3f4f6, #101114);
+
+  /* Text */
+  --fg: light-dark(#18181b, #edeef3);
+  --fg-strong: light-dark(#09090b, #ffffff);
+  --muted: light-dark(#6b7280, #9195a1);
+
+  /* Lines */
+  --line: light-dark(#e5e7eb, #353841);
+  --line-strong: light-dark(#d1d5db, #4b4f5c);
+
+  /* Accent: fills (buttons, badges) keep white text legible in both themes */
+  --accent: light-dark(#2563eb, #2f6fed);
+  --accent-hover: light-dark(#1d4ed8, #3b82f6);
+  --accent-fg: #ffffff;
+  --accent-soft-bg: light-dark(#eff6ff, #1c2942);
+  --accent-soft-border: light-dark(#93c5fd, #3a5fc4);
+  --accent-soft-fg: light-dark(#1d4ed8, #93c5fd);
+
+  /* Links: text on the page background, a lighter blue in the dark theme for contrast */
+  --link: light-dark(#1d4ed8, #93c5fd);
+  --link-hover: light-dark(#1e40af, #bfdbfe);
+
+  /* Feedback */
+  --danger-fg: light-dark(#b91c1c, #fca5a5);
+  --danger-bg: light-dark(#fef2f2, #3f1d1d);
+  --danger-border: light-dark(#fecaca, #7f1d1d);
+
+  /* Overlays and depth */
+  --overlay-scrim: light-dark(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+  --shadow-color: light-dark(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.6));
+  --shadow-sm: 0 1px 2px var(--shadow-color);
+  --shadow-md: 0 8px 24px var(--shadow-color);
+  --shadow-lg: 0 20px 50px var(--shadow-color);
+
+  /* Type */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.65;
+
+  /* Shape */
+  --radius-sm: 0.35rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --header-height: 3.25rem;
+  --gutter: 1.5rem;
+  --content-width: 46rem;
+  --sidebar-width: 15rem;
+  --toc-width: 13rem;
+
+  /* Focus */
+  --focus-ring: 2px solid var(--accent);
+}
+
+/* An explicit choice from the theme toggle wins over the system preference. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

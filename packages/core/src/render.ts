@@ -43,8 +43,8 @@ function renderNode(node: TokenNode, y: number): string {
   return (
     `<g class="dtgraph-node" transform="translate(${NODE_X}, ${y})">` +
     title +
-    '<circle r="4" fill="#111827" />' +
-    `<text x="${LABEL_X - NODE_X}" y="4">${label}</text>` +
+    '<circle r="4" fill="currentColor" />' +
+    `<text x="${LABEL_X - NODE_X}" y="4" fill="currentColor">${label}</text>` +
     '</g>'
   );
 }
@@ -66,7 +66,7 @@ function renderEdge(edge: TokenEdge, yByPath: Map<string, number>): string | und
     `<g class="dtgraph-edge ${isComposite ? 'composite-member' : 'alias'}">` +
     `<path d="M ${LABEL_X} ${fromY} C ${EDGE_CURVE_X} ${fromY}, ${EDGE_CURVE_X} ${toY}, ${LABEL_X} ${toY}" ` +
     `fill="none" stroke="${stroke}"${dashArray} />` +
-    `<text x="${EDGE_LABEL_X}" y="${midY}" text-anchor="end">${label}</text>` +
+    `<text x="${EDGE_LABEL_X}" y="${midY}" text-anchor="end" fill="currentColor">${label}</text>` +
     '</g>'
   );
 }

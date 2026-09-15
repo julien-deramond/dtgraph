@@ -5,6 +5,8 @@ sidebar:
   order: 2
 ---
 
+import TokenGraph from '@dtgraph/mdx/TokenGraph.astro';
+
 [DTCG](https://www.designtokens.org/tr/2025.10/format/) (Design Tokens Community Group) is a
 draft W3C-community spec for a common JSON format for design tokens — the small, named values
 (colors, spacing, fonts, ...) that make up a design system. This page covers just enough of the
@@ -49,9 +51,21 @@ A token's `$value` can reference another token instead of a literal value, using
 ```
 
 `color.accent` now resolves to whatever `color.brand` is — change `brand`, and `accent` follows.
-This is exactly what dtgraph draws as an edge in the token graph. Aliases can chain (an alias
-pointing at another alias), but they can't cycle back on themselves — dtgraph rejects that as an
-error rather than resolving it ambiguously.
+This is exactly what dtgraph draws as an edge in the token graph. Here's this exact file,
+rendered live by dtgraph's own `<TokenGraph>` component (the same one this page's Getting
+started/CLI examples describe):
+
+<TokenGraph
+  tokens={{
+    color: {
+      brand: { $type: 'color', $value: '#3311ff' },
+      accent: { $value: '{color.brand}' },
+    },
+  }}
+/>
+
+Aliases can chain (an alias pointing at another alias), but they can't cycle back on
+themselves — dtgraph rejects that as an error rather than resolving it ambiguously.
 
 ## Composite tokens
 
@@ -76,10 +90,30 @@ an alias. `border` is a good example:
 }
 ```
 
-Here, `border.focusring`'s `color` member is itself an alias to `color.focusring` — dtgraph
-draws this as an edge too, just tagged as a "composite-member" edge instead of a plain alias, so
-you can tell at a glance which kind of reference it is. The spec defines several composite
-types this way: `border`, `shadow`, `gradient`, `typography`, `transition`, and `strokeStyle`.
+`border.focusring`'s `color` member is itself an alias to `color.focusring` — dtgraph draws this
+as an edge too, just tagged as a "composite-member" edge (dashed) instead of a plain alias
+(solid), so you can tell at a glance which kind of reference it is:
+
+<TokenGraph
+  tokens={{
+    color: {
+      focusring: { $type: 'color', $value: '#2563eb' },
+    },
+    border: {
+      focusring: {
+        $type: 'border',
+        $value: {
+          color: '{color.focusring}',
+          width: { value: 1, unit: 'px' },
+          style: 'solid',
+        },
+      },
+    },
+  }}
+/>
+
+The spec defines several composite types this way: `border`, `shadow`, `gradient`,
+`typography`, `transition`, and `strokeStyle`.
 
 ## Multiple files
 

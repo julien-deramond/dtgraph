@@ -1,0 +1,47 @@
+{
+  "name": "@dtgraph/mdx",
+  "version": "0.0.0",
+  "description": "Render a live DTCG token graph inline in MDX/Astro content",
+  "license": "MIT",
+  "author": "Julien Déramond",
+  "homepage": "https://github.com/julien-deramond/dtgraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julien-deramond/dtgraph",
+    "directory": "packages/mdx"
+  },
+  "bugs": {
+    "url": "https://github.com/julien-deramond/dtgraph/issues"
+  },
+  "keywords": [
+    "dtcg",
+    "design-tokens",
+    "design-system",
+    "mdx",
+    "astro",
+    "token-graph"
+  ],
+  "type": "module",
+  "exports": {
+    "./TokenGraph.astro": "./src/TokenGraph.astro"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dtgraph/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "astro": ">=5.0.0"
+  },
+  "devDependencies": {
+    "astro": "7.3.2",
+    "vitest": "3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

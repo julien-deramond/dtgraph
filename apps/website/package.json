@@ -13,8 +13,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@astrojs/mdx": "8.0.1",
     "@astrojs/starlight": "0.42.0",
     "@dtgraph/core": "workspace:^",
+    "@dtgraph/mdx": "workspace:^",
     "astro": "7.3.2"
   },
   "devDependencies": {

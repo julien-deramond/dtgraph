@@ -37,3 +37,371 @@
 .dtgraph-viewer__stage:active {
   cursor: grabbing;
 }
+
+/* --- Overlay chrome: search (top left), legend (bottom left), detail panel (right) ---------- */
+
+.dtgraph-viewer {
+  --dtgraph-viewer-panel-bg: rgba(17, 19, 26, 0.86);
+  --dtgraph-viewer-panel-fg: #e4e4e7;
+  --dtgraph-viewer-panel-muted: #a1a1aa;
+  --dtgraph-viewer-panel-line: rgba(255, 255, 255, 0.1);
+  --dtgraph-viewer-panel-hover: rgba(255, 255, 255, 0.07);
+  --dtgraph-viewer-accent: #60a5fa;
+  --dtgraph-viewer-code-bg: rgba(0, 0, 0, 0.35);
+}
+
+.dtgraph-viewer[data-theme='light'] {
+  --dtgraph-viewer-panel-bg: rgba(255, 255, 255, 0.9);
+  --dtgraph-viewer-panel-fg: #18181b;
+  --dtgraph-viewer-panel-muted: #52525b;
+  --dtgraph-viewer-panel-line: rgba(0, 0, 0, 0.1);
+  --dtgraph-viewer-panel-hover: rgba(0, 0, 0, 0.05);
+  --dtgraph-viewer-accent: #2563eb;
+  --dtgraph-viewer-code-bg: rgba(0, 0, 0, 0.05);
+}
+
+.dtgraph-viewer__ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--dtgraph-viewer-panel-fg);
+}
+
+.dtgraph-viewer__ui > * {
+  pointer-events: auto;
+}
+
+.dtgraph-viewer__search,
+.dtgraph-viewer__legend,
+.dtgraph-viewer__panel {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--dtgraph-viewer-panel-line);
+  border-radius: 10px;
+  background: var(--dtgraph-viewer-panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Search */
+.dtgraph-viewer__search {
+  top: 12px;
+  left: 12px;
+  width: min(320px, calc(100% - 24px));
+}
+
+.dtgraph-viewer__search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 40px 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  outline: none;
+}
+
+.dtgraph-viewer__search-input::placeholder {
+  color: var(--dtgraph-viewer-panel-muted);
+}
+
+.dtgraph-viewer__search:focus-within {
+  border-color: var(--dtgraph-viewer-accent);
+}
+
+.dtgraph-viewer__search-kbd {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 1px 6px;
+  border: 1px solid var(--dtgraph-viewer-panel-line);
+  border-radius: 5px;
+  color: var(--dtgraph-viewer-panel-muted);
+  font: 11px var(--dtgraph-viewer-font);
+  pointer-events: none;
+}
+
+.dtgraph-viewer__search:focus-within .dtgraph-viewer__search-kbd {
+  display: none;
+}
+
+.dtgraph-viewer__search-results {
+  max-height: 50vh;
+  margin: 0;
+  padding: 4px;
+  border-top: 1px solid var(--dtgraph-viewer-panel-line);
+  list-style: none;
+  overflow-y: auto;
+}
+
+.dtgraph-viewer__search-row,
+.dtgraph-viewer__search-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dtgraph-viewer__search-empty {
+  color: var(--dtgraph-viewer-panel-muted);
+  cursor: default;
+}
+
+.dtgraph-viewer__search-row[aria-selected='true'],
+.dtgraph-viewer__search-row:hover {
+  background: var(--dtgraph-viewer-panel-hover);
+}
+
+.dtgraph-viewer__search-row .dtgraph-viewer__path {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Shared bits */
+.dtgraph-viewer__dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dtgraph-viewer__path-prefix {
+  color: var(--dtgraph-viewer-panel-muted);
+}
+
+.dtgraph-viewer__chip {
+  flex: none;
+  padding: 1px 7px;
+  border: 1px solid var(--dtgraph-viewer-panel-line);
+  border-radius: 999px;
+  color: var(--dtgraph-viewer-panel-muted);
+  font-size: 11px;
+}
+
+.dtgraph-viewer__muted {
+  margin: 6px 0 0;
+  color: var(--dtgraph-viewer-panel-muted);
+}
+
+.dtgraph-viewer__link {
+  padding: 0;
+  border: 0;
+  color: var(--dtgraph-viewer-accent);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dtgraph-viewer__link:hover {
+  text-decoration: underline;
+}
+
+/* Legend */
+.dtgraph-viewer__legend {
+  left: 12px;
+  bottom: 12px;
+  max-width: min(260px, calc(100% - 24px));
+  padding: 4px 0;
+}
+
+.dtgraph-viewer__legend-title {
+  padding: 5px 12px;
+  color: var(--dtgraph-viewer-panel-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dtgraph-viewer__legend-list {
+  max-height: 32vh;
+  margin: 0;
+  padding: 0 4px 2px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.dtgraph-viewer__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dtgraph-viewer__legend-item:hover,
+.dtgraph-viewer__legend-item[aria-pressed='true'] {
+  background: var(--dtgraph-viewer-panel-hover);
+}
+
+.dtgraph-viewer__legend-item[aria-pressed='true'] .dtgraph-viewer__legend-label {
+  font-weight: 600;
+}
+
+.dtgraph-viewer__legend-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dtgraph-viewer__legend-count {
+  color: var(--dtgraph-viewer-panel-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Detail panel */
+.dtgraph-viewer__panel {
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: min(340px, calc(100% - 24px));
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+
+.dtgraph-viewer__panel[hidden] {
+  display: none;
+}
+
+.dtgraph-viewer__panel-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.dtgraph-viewer__panel-title {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.dtgraph-viewer__close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--dtgraph-viewer-panel-muted);
+  background: none;
+  font: 18px/1 var(--dtgraph-viewer-font);
+  cursor: pointer;
+}
+
+.dtgraph-viewer__close:hover {
+  background: var(--dtgraph-viewer-panel-hover);
+}
+
+.dtgraph-viewer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.dtgraph-viewer__description {
+  margin: 10px 0 0;
+  color: var(--dtgraph-viewer-panel-muted);
+}
+
+.dtgraph-viewer__section {
+  margin-top: 14px;
+}
+
+.dtgraph-viewer__section-title {
+  margin: 0 0 6px;
+  color: var(--dtgraph-viewer-panel-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dtgraph-viewer__swatch {
+  height: 28px;
+  margin-bottom: 6px;
+  border: 1px solid var(--dtgraph-viewer-panel-line);
+  border-radius: 6px;
+}
+
+.dtgraph-viewer__code {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--dtgraph-viewer-code-bg);
+  font:
+    12px/1.45 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dtgraph-viewer__relations {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dtgraph-viewer__relation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dtgraph-viewer__relation:hover {
+  background: var(--dtgraph-viewer-panel-hover);
+}
+
+.dtgraph-viewer__relation .dtgraph-viewer__path {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dtgraph-viewer__search-input:focus-visible,
+.dtgraph-viewer__legend-item:focus-visible,
+.dtgraph-viewer__relation:focus-visible,
+.dtgraph-viewer__close:focus-visible,
+.dtgraph-viewer__link:focus-visible {
+  outline: 2px solid var(--dtgraph-viewer-accent);
+  outline-offset: 1px;
+}

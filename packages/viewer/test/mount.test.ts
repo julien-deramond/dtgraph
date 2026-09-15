@@ -154,6 +154,70 @@ describe('mountTokenGraphViewer', () => {
     expect(sigma.camera.animatedReset).toHaveBeenCalled();
   });
 
+  it('selects on click, spotlights the transitive chains, and opens the panel', () => {
+    const onSelect = vi.fn();
+    const container = makeContainer();
+    const viewer = mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE), { onSelect });
+    const sigma = instances[0];
+    const nodeReducer = sigma.settings.nodeReducer as (
+      node: string,
+      data: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    const data = { color: '#ffffff', label: 'x', zIndex: 0, size: 1 };
+
+    sigma.emit('clickNode', { node: 'color.blue' });
+    expect(viewer.selected).toBe('color.blue');
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ path: ['color', 'blue'] }));
+    expect(nodeReducer('color.blue', data)).toMatchObject({ highlighted: true, forceLabel: true });
+    expect(nodeReducer('semantic.primary', data)).toMatchObject({ label: 'x', forceLabel: true });
+    // Indirect dependents stay lit but are not force-labeled.
+    expect(nodeReducer('button.background', data)).toMatchObject({ label: 'x', forceLabel: false });
+    expect(nodeReducer('color.gray', data).label).toBeNull();
+    const panel = container.querySelector<HTMLElement>('.dtgraph-viewer__panel');
+    expect(panel?.hidden).toBe(false);
+    expect(panel?.textContent).toContain('color.blue');
+
+    sigma.emit('clickStage', {});
+    expect(viewer.selected).toBeUndefined();
+    expect(onSelect).toHaveBeenLastCalledWith(undefined);
+    expect(panel?.hidden).toBe(true);
+    expect(nodeReducer('color.gray', data)).toEqual(data);
+  });
+
+  it('lets the legend solo a category', () => {
+    const container = makeContainer();
+    mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));
+    const sigma = instances[0];
+    const nodeReducer = sigma.settings.nodeReducer as (
+      node: string,
+      data: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    const data = { color: '#ffffff', label: 'x', zIndex: 0, size: 1 };
+    const items = container.querySelectorAll<HTMLButtonElement>('.dtgraph-viewer__legend-item');
+    // Sorted by count desc then name: button (3), color (3), semantic (2), spacing (1).
+    expect(items[0].textContent).toContain('button');
+    items[1].click(); // color
+    expect(nodeReducer('color.blue', data)).toEqual(data);
+    expect(nodeReducer('button.text', data).label).toBeNull();
+  });
+
+  it('focuses search on "/" and clears the selection on Escape', () => {
+    const container = makeContainer();
+    const viewer = mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+    expect(document.activeElement).toBe(container.querySelector('input'));
+    viewer.select(['color', 'blue']);
+    expect(viewer.selected).toBe('color.blue');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(viewer.selected).toBeUndefined();
+  });
+
+  it('can run without chrome', () => {
+    const container = makeContainer();
+    mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE), { chrome: false });
+    expect(container.querySelector('.dtgraph-viewer__ui')).toBeNull();
+  });
+
   it('cleans up completely on destroy', () => {
     const container = makeContainer();
     const viewer = mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));

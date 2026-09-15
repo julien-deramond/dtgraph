@@ -1,0 +1,15 @@
+/*
+ * Aligns Starlight's accent hue with the playground's brand blue (#2563eb, see
+ * SiteLayout.astro's --accent) so /docs/* and the playground read as one product instead of
+ * two different blues (Starlight's stock accent is hue 234, a bluer purple).
+ */
+:root {
+  --sl-color-accent-low: hsl(221, 54%, 20%);
+  --sl-color-accent: hsl(221, 83%, 53%);
+  --sl-color-accent-high: hsl(221, 91%, 85%);
+}
+:root[data-theme='light'] {
+  --sl-color-accent-high: hsl(221, 83%, 30%);
+  --sl-color-accent: hsl(221, 83%, 53%);
+  --sl-color-accent-low: hsl(221, 91%, 90%);
+}

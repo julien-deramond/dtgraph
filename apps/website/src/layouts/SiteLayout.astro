@@ -31,6 +31,51 @@ const { title, fullBleed = false } = Astro.props;
       <slot />
     </main>
     <style is:global>
+      /*
+       * Shared with the playground's own scoped styles (src/pages/index.astro) — the two pages
+       * are the only surfaces outside Starlight, which brings its own token set for /docs/*.
+       * Values mirror Starlight's neutral/accent hues (gray hue 224, accent hue ~221) so the
+       * chrome reads as one product rather than two.
+       */
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --surface-muted: #f9fafb;
+        --fg: #18181b;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --accent: #2563eb;
+        --accent-hover: #1d4ed8;
+        --accent-fg: #ffffff;
+        --accent-soft-bg: #eff6ff;
+        --accent-soft-border: #93c5fd;
+        --accent-soft-fg: #1d4ed8;
+        --danger-fg: #b91c1c;
+        --danger-bg: #fef2f2;
+        --danger-border: #fecaca;
+        --overlay-scrim: rgba(0, 0, 0, 0.4);
+        --shadow-color: rgba(0, 0, 0, 0.25);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #17181c;
+          --surface: #23262f;
+          --surface-muted: #2b2e38;
+          --fg: #edeef3;
+          --muted: #9195a1;
+          --line: #353841;
+          --accent-hover: #3b82f6;
+          --accent-soft-bg: #1c2942;
+          --accent-soft-border: #3a5fc4;
+          --accent-soft-fg: #93c5fd;
+          --danger-fg: #fca5a5;
+          --danger-bg: #3f1d1d;
+          --danger-border: #7f1d1d;
+          --overlay-scrim: rgba(0, 0, 0, 0.6);
+          --shadow-color: rgba(0, 0, 0, 0.6);
+        }
+      }
       html,
       body {
         height: 100%;
@@ -40,8 +85,12 @@ const { title, fullBleed = false } = Astro.props;
         display: flex;
         flex-direction: column;
         font-family: system-ui, sans-serif;
-        color: #18181b;
-        background: #ffffff;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      ::selection {
+        background: var(--accent);
+        color: var(--accent-fg);
       }
     </style>
     <style>
@@ -51,12 +100,13 @@ const { title, fullBleed = false } = Astro.props;
         justify-content: space-between;
         flex: none;
         padding: 0.75rem 1.5rem;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--line);
       }
       .brand {
         font-weight: 700;
         text-decoration: none;
         color: inherit;
+        border-radius: 0.25rem;
       }
       nav {
         display: flex;
@@ -65,9 +115,15 @@ const { title, fullBleed = false } = Astro.props;
       nav a {
         color: inherit;
         text-decoration: none;
+        border-radius: 0.25rem;
       }
       nav a:hover {
         text-decoration: underline;
+      }
+      .brand:focus-visible,
+      nav a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
       main {
         flex: 1 1 auto;

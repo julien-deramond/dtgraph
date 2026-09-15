@@ -15,6 +15,7 @@ export default defineConfig({
     starlight({
       title: 'dtgraph',
       description: 'Render and validate Design Tokens Community Group (DTCG) token graphs.',
+      customCss: ['./src/styles/starlight-brand.css'],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/julien-deramond/dtgraph' },
       ],

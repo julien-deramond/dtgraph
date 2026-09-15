@@ -62,13 +62,12 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
   <style>
     .playground {
-      --line: #e5e7eb;
-      --muted: #6b7280;
-      --accent: #2563eb;
       display: flex;
       flex: 1 1 auto;
       flex-direction: column;
       min-height: 0;
+      background: var(--bg);
+      color: var(--fg);
     }
     .toolbar {
       display: flex;
@@ -112,28 +111,28 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       padding: 0.15rem 0.5rem;
       border: 1px solid var(--line);
       border-radius: 999px;
-      color: #374151;
-      background: #f9fafb;
+      color: var(--fg);
+      background: var(--surface-muted);
       white-space: nowrap;
       text-overflow: ellipsis;
     }
     .chips > :global(.chip--resolver) {
-      border-color: #93c5fd;
-      background: #eff6ff;
-      color: #1d4ed8;
+      border-color: var(--accent-soft-border);
+      background: var(--accent-soft-bg);
+      color: var(--accent-soft-fg);
     }
     .chips > :global(.chip--ignored) {
-      color: #9ca3af;
+      color: var(--muted);
       text-decoration: line-through;
     }
     .chips > :global(.chip--toggle) {
       color: var(--accent);
-      background: #fff;
+      background: var(--surface);
       font: inherit;
       cursor: pointer;
     }
     .chips > :global(.chip--toggle:hover) {
-      background: #f3f4f6;
+      background: var(--surface-muted);
     }
     .contexts {
       display: flex;
@@ -153,7 +152,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       padding: 0.1rem 0.3rem;
       border: 1px solid var(--line);
       border-radius: 0.35rem;
-      background: #fff;
+      color: inherit;
+      background: var(--surface);
       font: inherit;
     }
     .contexts :global(select.select--unset) {
@@ -169,13 +169,13 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       border: 1px solid var(--line);
       border-radius: 0.5rem;
       color: inherit;
-      background: #ffffff;
+      background: var(--surface);
       font: inherit;
       cursor: pointer;
     }
     .btn:hover,
     .segmented button:hover {
-      background: #f3f4f6;
+      background: var(--surface-muted);
     }
     .btn:focus-visible,
     .segmented button:focus-visible,
@@ -185,11 +185,12 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     }
     .btn--primary {
       border-color: var(--accent);
-      color: #ffffff;
+      color: var(--accent-fg);
       background: var(--accent);
+      box-shadow: 0 1px 2px var(--shadow-color);
     }
     .btn--primary:hover {
-      background: #1d4ed8;
+      background: var(--accent-hover);
     }
     .btn--ghost {
       border-color: transparent;
@@ -216,16 +217,16 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       border-radius: 0 0.5rem 0.5rem 0;
     }
     .segmented button[aria-pressed='true'] {
-      color: #ffffff;
-      background: #18181b;
-      border-color: #18181b;
+      color: var(--bg);
+      background: var(--fg);
+      border-color: var(--fg);
     }
     .error {
       margin: 0;
       padding: 0.6rem 1rem;
-      border-bottom: 1px solid #fecaca;
-      color: #b91c1c;
-      background: #fef2f2;
+      border-bottom: 1px solid var(--danger-border);
+      color: var(--danger-fg);
+      background: var(--danger-bg);
       font-size: 0.875rem;
       white-space: pre-wrap;
     }
@@ -269,7 +270,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       padding: 1.25rem 1.5rem;
       border: 1px solid var(--line);
       border-radius: 0.75rem;
-      background: #fff;
+      color: var(--fg);
+      background: var(--surface);
+      box-shadow: 0 8px 24px var(--shadow-color);
       text-align: center;
     }
     .prompt[hidden] {
@@ -303,7 +306,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       padding: 0.25rem 0.4rem;
       border: 1px solid var(--accent);
       border-radius: 0.35rem;
-      background: #fff;
+      color: inherit;
+      background: var(--surface);
       font: inherit;
     }
     .drop-overlay {
@@ -313,7 +317,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       align-items: center;
       justify-content: center;
       border: 3px dashed var(--accent);
-      background: rgba(37, 99, 235, 0.12);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
       pointer-events: none;
     }
     .drop-overlay[hidden] {
@@ -322,7 +326,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     .drop-overlay__card {
       padding: 1rem 1.5rem;
       border-radius: 0.75rem;
-      color: #ffffff;
+      color: var(--accent-fg);
       background: var(--accent);
       font-weight: 600;
     }
@@ -331,10 +335,12 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       padding: 1.25rem;
       border: 1px solid var(--line);
       border-radius: 0.75rem;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      color: var(--fg);
+      background: var(--surface);
+      box-shadow: 0 20px 50px var(--shadow-color);
     }
     .dialog::backdrop {
-      background: rgba(0, 0, 0, 0.4);
+      background: var(--overlay-scrim);
     }
     .dialog h2 {
       margin: 0 0 0.75rem;
@@ -347,6 +353,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       padding: 0.5rem;
       border: 1px solid var(--line);
       border-radius: 0.5rem;
+      color: inherit;
+      background: var(--surface-muted);
       font-family: ui-monospace, monospace;
       font-size: 0.8125rem;
     }

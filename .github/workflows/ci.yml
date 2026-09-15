@@ -29,11 +29,15 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Typecheck
-        run: pnpm run typecheck
-
+      # Build before typecheck: a package's declaration output (e.g. @dtgraph/core's dist/*.d.ts)
+      # is how its workspace dependents (e.g. packages/cli) resolve its types, and pnpm's
+      # topological build order only guarantees core builds before cli — not that core is built
+      # before cli is *typechecked*, since typecheck is a separate, non-topologically-linked step.
       - name: Build
         run: pnpm run build
+
+      - name: Typecheck
+        run: pnpm run typecheck
 
       - name: Test
         run: pnpm run test

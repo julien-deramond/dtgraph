@@ -1,0 +1,96 @@
+---
+title: DTCG primer
+description: What a DTCG token file looks like, for someone who's never seen one before.
+sidebar:
+  order: 2
+---
+
+[DTCG](https://www.designtokens.org/tr/2025.10/format/) (Design Tokens Community Group) is a
+draft W3C-community spec for a common JSON format for design tokens — the small, named values
+(colors, spacing, fonts, ...) that make up a design system. This page covers just enough of the
+format to read and write the files dtgraph works with; see the spec itself for the full
+normative reference.
+
+## A single token
+
+A token is a JSON object with a `$value` (required) and usually a `$type`:
+
+```json
+{
+  "color": {
+    "brand": {
+      "$type": "color",
+      "$value": "#3311ff"
+    }
+  }
+}
+```
+
+The token's **path** is built from its position in the JSON tree — here, `color.brand`. Any
+plain object without its own `$value` is a **group**, just a way to organize tokens (`color` in
+the example above is a group, not a token).
+
+`$type` tells tools what shape to expect in `$value` — `color`, `dimension`, `fontFamily`,
+`fontWeight`, `duration`, `cubicBezier`, and `number` are the primitive types the spec defines.
+A group can also set `$type`, which every token inside it inherits unless it sets its own.
+
+## Aliases
+
+A token's `$value` can reference another token instead of a literal value, using
+`{group.path.to.token}` syntax:
+
+```json
+{
+  "color": {
+    "brand": { "$type": "color", "$value": "#3311ff" },
+    "accent": { "$value": "{color.brand}" }
+  }
+}
+```
+
+`color.accent` now resolves to whatever `color.brand` is — change `brand`, and `accent` follows.
+This is exactly what dtgraph draws as an edge in the token graph. Aliases can chain (an alias
+pointing at another alias), but they can't cycle back on themselves — dtgraph rejects that as an
+error rather than resolving it ambiguously.
+
+## Composite tokens
+
+Some `$type`s are objects made of several sub-values, each of which can itself be a literal or
+an alias. `border` is a good example:
+
+```json
+{
+  "color": {
+    "focusring": { "$type": "color", "$value": "#2563eb" }
+  },
+  "border": {
+    "focusring": {
+      "$type": "border",
+      "$value": {
+        "color": "{color.focusring}",
+        "width": { "value": 1, "unit": "px" },
+        "style": "solid"
+      }
+    }
+  }
+}
+```
+
+Here, `border.focusring`'s `color` member is itself an alias to `color.focusring` — dtgraph
+draws this as an edge too, just tagged as a "composite-member" edge instead of a plain alias, so
+you can tell at a glance which kind of reference it is. The spec defines several composite
+types this way: `border`, `shadow`, `gradient`, `typography`, `transition`, and `strokeStyle`.
+
+## Multiple files
+
+Real projects usually split tokens across files (`color.json`, `spacing.json`, ...). dtgraph
+handles this too — both the CLI and the playground accept multiple files at once and resolve
+aliases across all of them, as long as no two files define a token at the same path.
+
+## Where to go next
+
+- Try it yourself in **[the playground](/)** — paste one of the examples above.
+- Read the **[Getting started](/docs/getting-started/)** guide to install the CLI.
+- For anything not covered here — property-level references, JSON Pointer syntax, the full set
+  of composite type shapes — see the
+  [DTCG format spec](https://www.designtokens.org/tr/2025.10/format/) directly.

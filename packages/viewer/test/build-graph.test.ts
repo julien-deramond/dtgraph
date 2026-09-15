@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  baseNodeSize,
   buildViewerGraph,
   countTransitiveDependents,
   nodeSizeForDependents,
@@ -45,6 +46,12 @@ describe('nodeSizeForDependents', () => {
     expect(nodeSizeForDependents(0)).toBeLessThan(nodeSizeForDependents(1));
     expect(nodeSizeForDependents(1)).toBeLessThan(nodeSizeForDependents(10));
     expect(nodeSizeForDependents(10_000)).toBe(28);
+  });
+
+  it('starts from a bigger base for small graphs', () => {
+    expect(baseNodeSize(2)).toBeGreaterThan(baseNodeSize(500));
+    expect(nodeSizeForDependents(0, baseNodeSize(2))).toBe(6);
+    expect(nodeSizeForDependents(0, baseNodeSize(500))).toBe(3);
   });
 });
 

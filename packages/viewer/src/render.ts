@@ -88,7 +88,8 @@ export function createSigmaSettings(
     labelSize: 12,
     labelWeight: '500',
     labelColor: { color: theme.label },
-    labelRenderedSizeThreshold: 4,
+    // Every node is label-eligible (the smallest is 3px); the label grid keeps big graphs tidy.
+    labelRenderedSizeThreshold: 3,
     labelDensity: 1,
     labelGridCellSize: 60,
     defaultDrawNodeLabel: createLabelDrawer(theme),

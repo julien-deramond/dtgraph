@@ -171,6 +171,38 @@ export function placeIsolatesAsSatellites(graph: ViewerGraph): void {
   }
 }
 
+export interface Extent {
+  x: [number, number];
+  y: [number, number];
+}
+
+/**
+ * The bounding box Sigma should fit to the viewport. Sigma normalizes positions to the graph's
+ * own extent, so a two-token graph would be stretched edge to edge with one node in each corner.
+ * Small graphs get a box grown around their center instead — `~sqrt(24 / order)` times larger,
+ * so a handful of tokens sits comfortably in the middle while anything past two dozen fills the
+ * view as usual.
+ */
+export function viewerExtent(graph: ViewerGraph): Extent | undefined {
+  if (graph.order === 0) return undefined;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  graph.forEachNode((_, attrs) => {
+    minX = Math.min(minX, attrs.x);
+    maxX = Math.max(maxX, attrs.x);
+    minY = Math.min(minY, attrs.y);
+    maxY = Math.max(maxY, attrs.y);
+  });
+  const grow = Math.sqrt(Math.max(1, 24 / graph.order));
+  if (grow === 1) return { x: [minX, maxX], y: [minY, maxY] };
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const half = (Math.max(maxX - minX, maxY - minY) / 2 || 1) * grow;
+  return { x: [cx - half, cx + half], y: [cy - half, cy + half] };
+}
+
 /**
  * Compute positions in place: a deterministic circular seed, ForceAtlas2 so tokens that reference
  * each other pull into clusters (the Gephi look), then isolated tokens packed into per-group satellite discs outside.

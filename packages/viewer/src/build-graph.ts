@@ -124,12 +124,20 @@ export function countTransitiveDependents(graph: TokenGraph): Map<string, number
   return counts;
 }
 
+/** Graphs with at most this many tokens get bigger base dots — they have the room. */
+export const SMALL_GRAPH_ORDER = 24;
+
+/** Base node radius (a token nobody depends on) for a graph with `order` tokens. */
+export function baseNodeSize(order: number): number {
+  return order <= SMALL_GRAPH_ORDER ? 6 : 3;
+}
+
 /**
  * Node radius from its dependent count: a square-root scale so heavily-used primitives are
  * clearly bigger without dwarfing everything else, clamped to keep labels and hit areas sane.
  */
-export function nodeSizeForDependents(dependents: number): number {
-  return Math.min(3 + 2.6 * Math.sqrt(dependents), 28);
+export function nodeSizeForDependents(dependents: number, base = 3): number {
+  return Math.min(base + 2.6 * Math.sqrt(dependents), 28);
 }
 
 function edgeKey(edge: TokenEdge, index: number): string {
@@ -154,6 +162,7 @@ export function buildViewerGraph(
     categoryOf(node, colorBy, types.get(pathKey(node.path)) ?? UNTYPED);
   const categories = assignCategoryColors(tokenGraph.nodes.map(categoryFor), palette);
   const dependents = countTransitiveDependents(tokenGraph);
+  const base = baseNodeSize(tokenGraph.nodes.length);
 
   for (const node of tokenGraph.nodes) {
     const path = pathKey(node.path);
@@ -166,7 +175,7 @@ export function buildViewerGraph(
       tokenType: types.get(path) ?? UNTYPED,
       dependents: count,
       color: categories.get(categoryFor(node)) ?? palette[0],
-      size: nodeSizeForDependents(count),
+      size: nodeSizeForDependents(count, base),
       x: 0,
       y: 0,
       zIndex: count,

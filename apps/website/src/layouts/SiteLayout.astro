@@ -3,9 +3,11 @@ import { CSP_HEADER_VALUE } from '../lib/csp.js';
 
 export interface Props {
   title: string;
+  /** Let the page fill the viewport below the header, with no padding (the playground). */
+  fullBleed?: boolean;
 }
 
-const { title } = Astro.props;
+const { title, fullBleed = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -25,17 +27,31 @@ const { title } = Astro.props;
         <a href="https://github.com/julien-deramond/dtgraph">GitHub</a>
       </nav>
     </header>
-    <main>
+    <main class:list={{ 'full-bleed': fullBleed }}>
       <slot />
     </main>
+    <style is:global>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        font-family: system-ui, sans-serif;
+        color: #18181b;
+        background: #ffffff;
+      }
+    </style>
     <style>
       .site-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem 1.5rem;
+        flex: none;
+        padding: 0.75rem 1.5rem;
         border-bottom: 1px solid #e5e7eb;
-        font-family: system-ui, sans-serif;
       }
       .brand {
         font-weight: 700;
@@ -54,8 +70,14 @@ const { title } = Astro.props;
         text-decoration: underline;
       }
       main {
-        font-family: system-ui, sans-serif;
+        flex: 1 1 auto;
+        min-height: 0;
         padding: 2rem 1.5rem;
+      }
+      main.full-bleed {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
       }
     </style>
   </body>

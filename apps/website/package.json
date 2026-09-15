@@ -17,6 +17,7 @@
     "@astrojs/starlight": "0.42.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/mdx": "workspace:^",
+    "@dtgraph/viewer": "workspace:^",
     "astro": "7.3.2"
   },
   "devDependencies": {

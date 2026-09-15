@@ -8,7 +8,7 @@ import {
   type ViewerGraph,
   type ViewerNodeAttributes,
 } from './build-graph.js';
-import { layoutViewerGraph, type LayoutOptions } from './layout.js';
+import { layoutViewerGraph, viewerExtent, type LayoutOptions } from './layout.js';
 import { createInteractionState, createSigmaSettings } from './render.js';
 import { THEMES, type ViewerTheme } from './theme.js';
 
@@ -83,6 +83,9 @@ export function mountTokenGraphViewer(
     );
   }
 
+  const extent = viewerExtent(graph);
+  if (extent !== undefined) sigma.setCustomBBox(extent);
+
   sigma.on('enterNode', ({ node }) => {
     state.hovered = node;
     state.neighborhood = new Set([node, ...graph.neighbors(node)]);
@@ -109,10 +112,12 @@ export function mountTokenGraphViewer(
     zoomTo(node);
   });
 
-  // Sigma only watches window resizes; follow the container too (panels, split panes, ...).
+  // Sigma only watches window resizes; follow the container too (panels, split panes, a banner
+  // appearing above the map, ...). `scheduleRefresh` is what Sigma's own window handler calls:
+  // a bare `resize()` re-sizes (and thereby clears) the canvases without redrawing them.
   let observer: ResizeObserver | undefined;
   if (typeof ResizeObserver !== 'undefined') {
-    observer = new ResizeObserver(() => sigma.resize());
+    observer = new ResizeObserver(() => sigma.scheduleRefresh());
     observer.observe(container);
   }
 

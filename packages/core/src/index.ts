@@ -1,4 +1,32 @@
 export { DtcgParseError } from './errors.js';
 export { parseTokenTree } from './parse.js';
 export { resolveAliasEdges } from './resolve.js';
-export type { GroupNode, TokenEdge, TokenNode, TokenTreeNode } from './types.js';
+export type {
+  Aliasable,
+  AliasReference,
+  BorderValue,
+  ColorObjectValue,
+  ColorValue,
+  CubicBezierValue,
+  DimensionValue,
+  DtcgType,
+  DurationValue,
+  FontFamilyValue,
+  FontWeightKeyword,
+  FontWeightValue,
+  GradientStopValue,
+  GradientValue,
+  GroupNode,
+  NumberValue,
+  ShadowObjectValue,
+  ShadowValue,
+  StrokeStyleKeyword,
+  StrokeStyleObjectValue,
+  StrokeStyleValue,
+  TokenEdge,
+  TokenGraph,
+  TokenNode,
+  TokenTreeNode,
+  TransitionValue,
+  TypographyValue,
+} from './types.js';

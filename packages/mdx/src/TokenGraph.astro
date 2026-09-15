@@ -1,0 +1,51 @@
+---
+import { readFileSync } from 'node:fs';
+
+import {
+  buildTokenGraph,
+  DtcgParseError,
+  flattenTokenTree,
+  parseTokenTree,
+  resolveAliasEdgesAcrossFiles,
+  renderTokenGraphToSvg,
+} from '@dtgraph/core';
+import type { NamedTokenTree } from '@dtgraph/core';
+
+export interface Props {
+  /** Inline DTCG JSON (already parsed), e.g. imported from a `.json` file. */
+  tokens?: unknown;
+  /**
+   * Path to a DTCG JSON file to read at build time, resolved relative to the current working
+   * directory (typically the Astro project root) — pass
+   * `new URL('./tokens.json', import.meta.url).pathname` for a path relative to the MDX/Astro
+   * file itself instead.
+   */
+  file?: string;
+  /** Multiple file paths (see `file`) — aliases resolve across all of them, same as the CLI. */
+  files?: string[];
+}
+
+const { tokens, file, files } = Astro.props;
+
+const namedTrees: NamedTokenTree[] = [];
+if (tokens !== undefined) {
+  namedTrees.push({ source: 'tokens', tree: parseTokenTree(tokens) });
+}
+for (const path of files ?? (file !== undefined ? [file] : [])) {
+  namedTrees.push({ source: path, tree: parseTokenTree(JSON.parse(readFileSync(path, 'utf8'))) });
+}
+
+if (namedTrees.length === 0) {
+  throw new DtcgParseError(
+    '<TokenGraph> requires a "tokens" prop (inline DTCG JSON) or a "file"/"files" prop (path(s) to DTCG JSON file(s))',
+    [],
+  );
+}
+
+const nodes = namedTrees.flatMap(({ tree }) => flattenTokenTree(tree));
+const edges = resolveAliasEdgesAcrossFiles(namedTrees);
+const svg = renderTokenGraphToSvg(buildTokenGraph(nodes, edges));
+---
+
+{/* svg is safe: renderTokenGraphToSvg escapes every piece of token-derived text it contains. */}
+<Fragment set:html={svg} />

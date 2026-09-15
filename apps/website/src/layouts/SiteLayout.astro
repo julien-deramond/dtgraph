@@ -18,10 +18,10 @@ const { title } = Astro.props;
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/">dtgraph</a>
+      <a class="brand" href={import.meta.env.BASE_URL}>dtgraph</a>
       <nav>
-        <a href="/">Playground</a>
-        <a href="/docs/">Docs</a>
+        <a href={import.meta.env.BASE_URL}>Playground</a>
+        <a href={`${import.meta.env.BASE_URL}/docs/`.replace(/\/+/g, '/')}>Docs</a>
         <a href="https://github.com/julien-deramond/dtgraph">GitHub</a>
       </nav>
     </header>

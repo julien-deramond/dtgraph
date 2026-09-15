@@ -19,7 +19,9 @@ export {
   forceAtlas2Settings,
   layoutViewerGraph,
   placeIsolatesAsSatellites,
+  viewerExtent,
 } from './layout.js';
+export type { Extent } from './layout.js';
 export type { LayoutOptions } from './layout.js';
 export { assignCategoryColors, DARK_PALETTE, fadeTowards, LIGHT_PALETTE } from './palette.js';
 export { THEMES } from './theme.js';

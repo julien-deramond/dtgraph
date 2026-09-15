@@ -8,7 +8,7 @@ import {
   type ViewerGraph,
   type ViewerNodeAttributes,
 } from './build-graph.js';
-import { layoutViewerGraph, type LayoutOptions } from './layout.js';
+import { layoutViewerGraph, viewerExtent, type LayoutOptions } from './layout.js';
 import { createInteractionState, createSigmaSettings } from './render.js';
 import { THEMES, type ViewerTheme } from './theme.js';
 
@@ -82,6 +82,9 @@ export function mountTokenGraphViewer(
       { cause: error },
     );
   }
+
+  const extent = viewerExtent(graph);
+  if (extent !== undefined) sigma.setCustomBBox(extent);
 
   sigma.on('enterNode', ({ node }) => {
     state.hovered = node;

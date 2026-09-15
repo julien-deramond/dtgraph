@@ -41,6 +41,10 @@ class FakeSigma {
   scheduleRefresh() {
     this.resized += 1;
   }
+  bbox: unknown = null;
+  setCustomBBox(bbox: unknown) {
+    this.bbox = bbox;
+  }
   kill() {
     this.killed = true;
   }
@@ -86,6 +90,7 @@ describe('mountTokenGraphViewer', () => {
     expect(instances[0].graph).toBe(viewer.graph);
     expect(viewer.graph.order).toBe(9);
     expect(Number.isFinite(viewer.graph.getNodeAttribute('color.blue', 'x'))).toBe(true);
+    expect(instances[0].bbox).toMatchObject({ x: expect.any(Array), y: expect.any(Array) });
   });
 
   it('applies the light theme on request', () => {

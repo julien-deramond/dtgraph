@@ -283,6 +283,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     });
 
     const format = new Intl.NumberFormat();
+    const count = (n: number, noun: string): string =>
+      `${format.format(n)} ${noun}${n === 1 ? '' : 's'}`;
     function reflect(): void {
       // File names are untrusted: build chips with textContent only.
       chips.replaceChildren(
@@ -297,7 +299,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       stats.textContent =
         graph === undefined
           ? ''
-          : `${format.format(graph.nodes.length)} tokens · ${format.format(graph.edges.length)} edges`;
+          : `${count(graph.nodes.length, 'token')} · ${count(graph.edges.length, 'edge')}`;
     }
 
     function load(files: { source: string; content: string }[]): void {

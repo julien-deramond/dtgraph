@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildViewerGraph } from '../src/build-graph.js';
-import { defaultIterations, layoutViewerGraph, placeIsolatesAsSatellites } from '../src/layout.js';
+import {
+  defaultIterations,
+  layoutViewerGraph,
+  placeIsolatesAsSatellites,
+  viewerExtent,
+} from '../src/layout.js';
 import { SAMPLE, tokenGraphFrom } from './helpers.js';
 
 describe('layoutViewerGraph', () => {
@@ -97,5 +102,35 @@ describe('layoutViewerGraph', () => {
   it('uses fewer iterations for bigger graphs', () => {
     expect(defaultIterations(50)).toBeGreaterThan(defaultIterations(500));
     expect(defaultIterations(500)).toBeGreaterThan(defaultIterations(5000));
+  });
+});
+
+describe('viewerExtent', () => {
+  it('is undefined for an empty graph', () => {
+    expect(viewerExtent(buildViewerGraph(tokenGraphFrom({})))).toBeUndefined();
+  });
+
+  it('grows the box around a tiny graph so it is not stretched edge to edge', () => {
+    const graph = buildViewerGraph(
+      tokenGraphFrom({ a: { $type: 'color', $value: '#000' }, b: { $value: '{a}' } }),
+    );
+    layoutViewerGraph(graph);
+    const extent = viewerExtent(graph);
+    if (extent === undefined) throw new Error('expected an extent');
+    const xs = graph.mapNodes((_, attrs) => attrs.x);
+    const ys = graph.mapNodes((_, attrs) => attrs.y);
+    const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+    expect(extent.x[1] - extent.x[0]).toBeGreaterThan(span * 3);
+    expect(extent.y[1] - extent.y[0]).toBe(extent.x[1] - extent.x[0]);
+  });
+
+  it('uses the exact bounds once the graph is big enough to fill the view', () => {
+    const tokens: Record<string, unknown> = {};
+    for (let i = 0; i < 30; i++) tokens[`t${i}`] = { $value: i };
+    const graph = buildViewerGraph(tokenGraphFrom(tokens));
+    layoutViewerGraph(graph);
+    const extent = viewerExtent(graph);
+    const xs = graph.mapNodes((_, attrs) => attrs.x);
+    expect(extent?.x).toEqual([Math.min(...xs), Math.max(...xs)]);
   });
 });

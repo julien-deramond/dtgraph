@@ -37,6 +37,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
         Drag to pan · Scroll to zoom · Hover to spotlight · Double-click to dive in · Drop DTCG
         files anywhere
       </div>
+      <div id="context-prompt" class="prompt" role="status" hidden></div>
       <div id="drop-overlay" class="drop-overlay" hidden>
         <div class="drop-overlay__card">Drop DTCG JSON file(s) to render them</div>
       </div>
@@ -85,19 +86,28 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     }
     .toolbar__status {
       display: flex;
-      flex: 1 1 12rem;
+      flex: 1 1 20rem;
+      flex-wrap: wrap;
       align-items: center;
       gap: 0.5rem;
-      min-width: 0;
       color: var(--muted);
     }
+    /*
+     * File chips and context selectors are built at runtime by the script below, so they never
+     * carry the scope class Astro adds to elements written in this template — a plain
+     * `.chips > span` rule compiles to one that requires that class and silently matches
+     * nothing. Anchor each rule to the scoped container and mark the generated child
+     * `:global()`, which is what lets these reach it.
+     */
     .chips {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.35rem;
       min-width: 0;
-      overflow: hidden;
     }
-    .chips > span {
+    .chips > :global(.chip) {
+      flex: 0 0 auto;
+      max-width: 14rem;
       overflow: hidden;
       padding: 0.15rem 0.5rem;
       border: 1px solid var(--line);
@@ -107,14 +117,23 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       white-space: nowrap;
       text-overflow: ellipsis;
     }
-    .chips > .chip--resolver {
+    .chips > :global(.chip--resolver) {
       border-color: #93c5fd;
       background: #eff6ff;
       color: #1d4ed8;
     }
-    .chips > .chip--ignored {
+    .chips > :global(.chip--ignored) {
       color: #9ca3af;
       text-decoration: line-through;
+    }
+    .chips > :global(.chip--toggle) {
+      color: var(--accent);
+      background: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    .chips > :global(.chip--toggle:hover) {
+      background: #f3f4f6;
     }
     .contexts {
       display: flex;
@@ -124,20 +143,20 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     .contexts:empty {
       display: none;
     }
-    .contexts label {
+    .contexts :global(label) {
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
       white-space: nowrap;
     }
-    .contexts select {
+    .contexts :global(select) {
       padding: 0.1rem 0.3rem;
       border: 1px solid var(--line);
       border-radius: 0.35rem;
       background: #fff;
       font: inherit;
     }
-    .contexts select.select--unset {
+    .contexts :global(select.select--unset) {
       border-color: var(--accent);
     }
     .stats {
@@ -237,6 +256,56 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       color: rgba(0, 0, 0, 0.6);
       background: rgba(255, 255, 255, 0.7);
     }
+    .prompt {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      max-width: min(30rem, calc(100% - 2rem));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      background: #fff;
+      text-align: center;
+    }
+    .prompt[hidden] {
+      display: none;
+    }
+    .prompt__title {
+      margin: 0;
+      font-size: 0.9375rem;
+      font-weight: 600;
+    }
+    .prompt__help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.8125rem;
+    }
+    .prompt__controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .prompt__controls :global(label) {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+      font-size: 0.8125rem;
+    }
+    .prompt__controls :global(select) {
+      padding: 0.25rem 0.4rem;
+      border: 1px solid var(--accent);
+      border-radius: 0.35rem;
+      background: #fff;
+      font: inherit;
+    }
     .drop-overlay {
       position: absolute;
       inset: 0;
@@ -296,6 +365,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
     import sample from '../samples/design-system.json';
     import { createPlayground, readFiles } from '../lib/playground.js';
+    import type { PlaygroundModifier, PlaygroundResolver } from '../lib/playground.js';
 
     const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
     const output = $<HTMLElement>('graph-output');
@@ -303,6 +373,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const fileInput = $<HTMLInputElement>('file-input');
     const chips = $<HTMLElement>('file-chips');
     const contextControls = $<HTMLElement>('context-controls');
+    const contextPrompt = $<HTMLElement>('context-prompt');
     const stats = $<HTMLElement>('stats');
     const dropOverlay = $<HTMLElement>('drop-overlay');
     const pasteDialog = $<HTMLDialogElement>('paste-dialog');
@@ -324,55 +395,135 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const format = new Intl.NumberFormat();
     const count = (n: number, noun: string): string =>
       `${format.format(n)} ${noun}${n === 1 ? '' : 's'}`;
+
+    /** Above this many files the row collapses to the resolver plus a count. */
+    const CHIP_LIMIT = 4;
+    let chipsExpanded = false;
+
+    /** One file chip. File names are untrusted: textContent only, never markup. */
+    function fileChip(file: { source: string }, resolver: PlaygroundResolver | undefined): HTMLElement {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = file.source;
+      chip.title = file.source;
+      if (resolver?.source === file.source) {
+        chip.classList.add('chip--resolver');
+        chip.title = `${file.source} (resolver)`;
+      } else if (resolver?.ignored.includes(file.source)) {
+        chip.classList.add('chip--ignored');
+        chip.title = `${file.source} (not referenced by the resolver for these contexts)`;
+      }
+      return chip;
+    }
+
+    function chipsToggle(hidden: number, keptAny: boolean): HTMLElement {
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'chip chip--toggle';
+      toggle.setAttribute('aria-expanded', String(chipsExpanded));
+      toggle.textContent = chipsExpanded
+        ? 'Show fewer'
+        : count(hidden, keptAny ? 'more file' : 'file');
+      toggle.addEventListener('click', () => {
+        chipsExpanded = !chipsExpanded;
+        reflect();
+      });
+      return toggle;
+    }
+
+    /**
+     * A handful of files each get a chip. Past that the row would overflow the toolbar, so it
+     * collapses to the resolver — the one file worth seeing at a glance — plus a count that
+     * expands the rest on click.
+     */
+    function renderChips(resolver: PlaygroundResolver | undefined): void {
+      const files = playground.files;
+      const all = files.map((file) => fileChip(file, resolver));
+      if (files.length <= CHIP_LIMIT) {
+        chipsExpanded = false;
+        chips.replaceChildren(...all);
+        return;
+      }
+      if (chipsExpanded) {
+        chips.replaceChildren(...all, chipsToggle(0, false));
+        return;
+      }
+      const resolverIndex = files.findIndex((file) => file.source === resolver?.source);
+      const kept = resolverIndex === -1 ? [] : [all[resolverIndex]];
+      chips.replaceChildren(...kept, chipsToggle(files.length - kept.length, kept.length > 0));
+    }
+
+    /** One selector for a modifier. Modifier and context names are untrusted too. */
+    function modifierSelect(modifier: PlaygroundModifier): HTMLElement {
+      const label = document.createElement('label');
+      label.append(`${modifier.name}:`);
+      const select = document.createElement('select');
+      // No default and nothing picked yet: the graph is waiting on this choice, so show it
+      // unset rather than silently applying a context the resolver never asked for.
+      if (modifier.selected === undefined) {
+        const placeholder = document.createElement('option');
+        placeholder.textContent = 'choose…';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        select.append(placeholder);
+        select.classList.add('select--unset');
+      }
+      for (const context of modifier.contexts) {
+        const option = document.createElement('option');
+        option.value = context;
+        option.textContent = context;
+        option.selected = context === modifier.selected;
+        select.append(option);
+      }
+      select.addEventListener('change', () => {
+        playground.setContext(modifier.name, select.value);
+        reflect();
+      });
+      label.append(select);
+      return label;
+    }
+
+    /**
+     * A resolver whose modifier declares no default has an open question, not an error, so the
+     * empty canvas states it and carries its own copy of the selectors rather than leaving a red
+     * banner and a blank stage.
+     */
+    function renderPrompt(resolver: PlaygroundResolver | undefined): void {
+      const pending = resolver?.pending ?? [];
+      if (pending.length === 0) {
+        contextPrompt.hidden = true;
+        contextPrompt.replaceChildren();
+        return;
+      }
+      const title = document.createElement('p');
+      title.className = 'prompt__title';
+      title.textContent =
+        pending.length === 1
+          ? `Choose a ${pending[0]} to render this resolver`
+          : 'Choose a context for each modifier to render this resolver';
+      const help = document.createElement('p');
+      help.className = 'prompt__help';
+      const quoted = pending.map((name) => `"${name}"`).join(', ');
+      help.textContent =
+        pending.length === 1
+          ? `${quoted} declares no default context, so there is nothing to render until you pick one.`
+          : `${quoted} declare no default context, so there is nothing to render until you pick one.`;
+      const controls = document.createElement('div');
+      controls.className = 'prompt__controls';
+      controls.append(
+        ...(resolver?.modifiers ?? [])
+          .filter((modifier) => pending.includes(modifier.name))
+          .map(modifierSelect),
+      );
+      contextPrompt.replaceChildren(title, help, controls);
+      contextPrompt.hidden = false;
+    }
+
     function reflect(): void {
       const resolver = playground.resolver;
-      // File names are untrusted: build chips with textContent only.
-      chips.replaceChildren(
-        ...playground.files.map((file) => {
-          const chip = document.createElement('span');
-          chip.textContent = file.source;
-          chip.title = file.source;
-          if (resolver?.source === file.source) {
-            chip.classList.add('chip--resolver');
-            chip.title = `${file.source} (resolver)`;
-          } else if (resolver?.ignored.includes(file.source)) {
-            chip.classList.add('chip--ignored');
-            chip.title = `${file.source} (not referenced by the resolver for these contexts)`;
-          }
-          return chip;
-        }),
-      );
-      // One selector per resolver modifier; modifier and context names are untrusted too.
-      contextControls.replaceChildren(
-        ...(resolver?.modifiers ?? []).map((modifier) => {
-          const label = document.createElement('label');
-          label.append(`${modifier.name}:`);
-          const select = document.createElement('select');
-          // No default and nothing picked yet: the graph is waiting on this choice, so show it
-          // unset rather than silently applying a context the resolver never asked for.
-          if (modifier.selected === undefined) {
-            const placeholder = document.createElement('option');
-            placeholder.textContent = 'choose…';
-            placeholder.disabled = true;
-            placeholder.selected = true;
-            select.append(placeholder);
-            select.classList.add('select--unset');
-          }
-          for (const context of modifier.contexts) {
-            const option = document.createElement('option');
-            option.value = context;
-            option.textContent = context;
-            option.selected = context === modifier.selected;
-            select.append(option);
-          }
-          select.addEventListener('change', () => {
-            playground.setContext(modifier.name, select.value);
-            reflect();
-          });
-          label.append(select);
-          return label;
-        }),
-      );
+      renderChips(resolver);
+      contextControls.replaceChildren(...(resolver?.modifiers ?? []).map(modifierSelect));
+      renderPrompt(resolver);
       const graph = playground.graph;
       stats.textContent =
         graph === undefined
@@ -381,6 +532,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     }
 
     function load(files: { source: string; content: string }[]): void {
+      chipsExpanded = false;
       playground.load(files);
       reflect();
     }

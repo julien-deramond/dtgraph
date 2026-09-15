@@ -91,6 +91,11 @@ export interface PlaygroundResolver {
   sources: string[];
   /** Loaded files that neither are the resolver nor were referenced by it — silently unused. */
   ignored: string[];
+  /**
+   * Modifiers that declare no default and have not been answered yet, so nothing has resolved.
+   * Empty for a resolver that produced the current graph.
+   */
+  pending: string[];
 }
 
 export interface PlaygroundController {
@@ -103,9 +108,9 @@ export interface PlaygroundController {
   /**
    * Parse, resolve, and show `files`, with every resolver modifier at its default context. On
    * failure the error is shown as plain text and whatever was on screen before stays there —
-   * except when a resolver modifier has no default, where the modifiers are exposed through
-   * {@link resolver} instead so the page can ask for a context and retry via {@link setContext}.
-   * Returns whether the load succeeded.
+   * except when a resolver modifier has no default, which is reported through
+   * {@link PlaygroundResolver.pending} rather than as an error, so the page can ask for a context
+   * and retry via {@link setContext}. Returns whether the load succeeded.
    */
   load(files: PlaygroundFileInput[]): boolean;
   /** Rebuild the current files with one modifier switched to another context. */
@@ -135,6 +140,7 @@ function describeResolver(
     ignored: files
       .map((file) => file.source)
       .filter((source) => source !== resolver.source && !used.has(source)),
+    pending: [],
   };
 }
 
@@ -157,6 +163,7 @@ function describePendingResolver(
     })),
     sources: [],
     ignored: [],
+    pending: error.missing,
   };
 }
 
@@ -189,17 +196,20 @@ export function createPlayground(els: PlaygroundElements, mount: MountGraph): Pl
     try {
       built = buildTokenGraphFromFiles(next, { context: nextContext });
     } catch (error) {
-      showError(error instanceof Error ? error.message : String(error));
-      // A resolver that only lacks a context is not a dead end: keep the files it came with so
-      // the page can offer the choices from the error and `setContext` can retry. Nothing
-      // resolved, so there is no graph to show alongside them.
+      // A resolver that only lacks a context is not a dead end, and not really a failure: the
+      // document is valid and simply has an open question. Keep the files it came with so the
+      // page can ask that question and `setContext` can retry, and leave the error banner clear
+      // — `pending` tells the page to prompt instead. Nothing resolved, so there is no graph.
       if (error instanceof MissingResolverContextsError) {
+        showError('');
         graph = undefined;
         files = [...next];
         context = nextContext;
         resolver = describePendingResolver(error, nextContext);
         mountCurrent();
+        return false;
       }
+      showError(error instanceof Error ? error.message : String(error));
       return false;
     }
     showError('');

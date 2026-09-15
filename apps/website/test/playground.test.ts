@@ -272,6 +272,7 @@ describe('resolver files in the playground', () => {
       modifiers: [{ name: 'theme', contexts: ['light', 'dark'], selected: 'light' }],
       sources: ['base.json', 'light.json'],
       ignored: ['dark.json', 'unrelated.json'],
+      pending: [],
     });
 
     expect(playground.setContext('theme', 'dark')).toBe(true);
@@ -301,10 +302,9 @@ describe('resolver files in the playground', () => {
 
     expect(playground.load([NO_DEFAULT, BASE, LIGHT, DARK])).toBe(false);
 
-    expect(els.error.hidden).toBe(false);
-    expect(els.error.textContent).toMatch(
-      /Modifier "theme" has no default context and none was given — choose one of: light, dark/,
-    );
+    // An open question, not a failure: no red banner, just the modifiers to answer.
+    expect(els.error.hidden).toBe(true);
+    expect(els.error.textContent).toBe('');
     // Nothing resolved, so the previous graph goes rather than sitting under the new file chips.
     expect(playground.graph).toBeUndefined();
     expect(els.output.children).toHaveLength(0);
@@ -314,6 +314,7 @@ describe('resolver files in the playground', () => {
       modifiers: [{ name: 'theme', contexts: ['light', 'dark'], selected: undefined }],
       sources: [],
       ignored: [],
+      pending: ['theme'],
     });
   });
 
@@ -327,6 +328,7 @@ describe('resolver files in the playground', () => {
     expect(playground.graph?.getOutgoingEdges(['semantic', 'bg'])[0].to).toEqual(['color', 'a']);
     expect(playground.resolver?.modifiers[0].selected).toBe('dark');
     expect(playground.resolver?.sources).toEqual(['base.json', 'dark.json']);
+    expect(playground.resolver?.pending).toEqual([]);
   });
 
   it('forgets the resolver when plain token files are loaded next', () => {

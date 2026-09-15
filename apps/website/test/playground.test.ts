@@ -2,6 +2,7 @@ import { DtcgParseError } from '@dtgraph/core';
 import { describe, expect, it } from 'vitest';
 
 import { readFiles, renderFilesToDom, renderTokenFilesToSvg } from '../src/lib/playground.js';
+import { MAX_FILE_BYTES, UploadTooComplexError } from '../src/lib/upload-guard.js';
 
 describe('renderTokenFilesToSvg', () => {
   it('renders a single valid token file to SVG', () => {
@@ -54,6 +55,13 @@ describe('renderTokenFilesToSvg', () => {
     expect(() =>
       renderTokenFilesToSvg([{ source: 'tokens.json', content: '{ not valid json' }]),
     ).toThrow(SyntaxError);
+  });
+
+  it('rejects an oversized upload before it ever reaches @dtgraph/core', () => {
+    const content = JSON.stringify({ padding: 'x'.repeat(MAX_FILE_BYTES) });
+    expect(() => renderTokenFilesToSvg([{ source: 'big.json', content }])).toThrow(
+      UploadTooComplexError,
+    );
   });
 });
 

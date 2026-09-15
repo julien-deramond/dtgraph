@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DtcgParseError } from '../src/errors.js';
 import { parseTokenTree } from '../src/parse.js';
-import { resolveAliasEdges } from '../src/resolve.js';
+import { resolveAliasEdges, resolveAliasEdgesAcrossFiles } from '../src/resolve.js';
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 
@@ -127,5 +127,62 @@ describe('resolveAliasEdges', () => {
     } catch (error) {
       expect((error as DtcgParseError).path).toEqual(['border', 'focusring']);
     }
+  });
+});
+
+describe('resolveAliasEdgesAcrossFiles', () => {
+  function loadNamedTree(category: 'valid' | 'invalid', file: string) {
+    return { source: file, tree: parseTokenTree(loadFixture(category, file)) };
+  }
+
+  it('resolves a scalar alias that points at a token defined in another file', () => {
+    const files = [
+      loadNamedTree('valid', 'cross-file-color.json'),
+      loadNamedTree('valid', 'cross-file-spacing.json'),
+      loadNamedTree('valid', 'cross-file-border.json'),
+    ];
+    const edges = resolveAliasEdgesAcrossFiles(files);
+
+    expect(edges).toContainEqual({
+      from: ['color', 'accent-alias'],
+      to: ['color', 'brand'],
+      reference: '{color.brand}',
+    });
+  });
+
+  it('resolves a composite-member alias that points across files', () => {
+    const files = [
+      loadNamedTree('valid', 'cross-file-color.json'),
+      loadNamedTree('valid', 'cross-file-spacing.json'),
+      loadNamedTree('valid', 'cross-file-border.json'),
+    ];
+    const edges = resolveAliasEdgesAcrossFiles(files);
+
+    expect(edges).toContainEqual({
+      from: ['border', 'accent'],
+      to: ['color', 'brand'],
+      reference: '{color.brand}',
+      kind: 'composite-member',
+      member: 'color',
+    });
+    expect(edges).toContainEqual({
+      from: ['border', 'accent'],
+      to: ['spacing', 'small'],
+      reference: '{spacing.small}',
+      kind: 'composite-member',
+      member: 'width',
+    });
+  });
+
+  it('rejects two files that define the same token path', () => {
+    const files = [
+      loadNamedTree('invalid', 'cross-file-collision-a.json'),
+      loadNamedTree('invalid', 'cross-file-collision-b.json'),
+    ];
+
+    expect(() => resolveAliasEdgesAcrossFiles(files)).toThrow(DtcgParseError);
+    expect(() => resolveAliasEdgesAcrossFiles(files)).toThrow(
+      /Token "color\.brand" is defined in both "cross-file-collision-a\.json" and "cross-file-collision-b\.json"/,
+    );
   });
 });

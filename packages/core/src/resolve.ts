@@ -2,6 +2,7 @@ import { DtcgParseError } from './errors.js';
 import type { TokenEdge, TokenNode, TokenTreeNode } from './types.js';
 
 const ALIAS_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/#aliases-references';
+const GROUP_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/#groups';
 
 const ALIAS_PATTERN = /^\{([^{}]+)\}$/;
 
@@ -102,20 +103,7 @@ function collectCompositeMemberEdges(
   }
 }
 
-/**
- * Resolve `{group.path.to.token}` alias references in token `$value`s into graph edges.
- * Each edge is a single hop — an alias pointing to another alias produces two edges
- * (one per hop), not one collapsed through to the final value.
- *
- * Scalar `$value`s that are entirely an alias produce a plain edge (`kind` unset). Composite
- * `$value`s (an object like `border`/`typography`, or an array like a layered `shadow`) are
- * walked one level deep for member aliases, producing `kind: "composite-member"` edges
- * tagged with which member (or array index) the alias came from.
- */
-export function resolveAliasEdges(tree: TokenTreeNode): TokenEdge[] {
-  const tokensByPath = new Map<string, TokenNode>();
-  collectTokens(tree, tokensByPath);
-
+function resolveEdgesFromTokenMap(tokensByPath: Map<string, TokenNode>): TokenEdge[] {
   const edges: TokenEdge[] = [];
   for (const token of tokensByPath.values()) {
     const reference = parseAliasReference(token.value);
@@ -129,4 +117,55 @@ export function resolveAliasEdges(tree: TokenTreeNode): TokenEdge[] {
     collectCompositeMemberEdges(token, token.value, undefined, tokensByPath, edges);
   }
   return edges;
+}
+
+/**
+ * Resolve `{group.path.to.token}` alias references in token `$value`s into graph edges.
+ * Each edge is a single hop — an alias pointing to another alias produces two edges
+ * (one per hop), not one collapsed through to the final value.
+ *
+ * Scalar `$value`s that are entirely an alias produce a plain edge (`kind` unset). Composite
+ * `$value`s (an object like `border`/`typography`, or an array like a layered `shadow`) are
+ * walked one level deep for member aliases, producing `kind: "composite-member"` edges
+ * tagged with which member (or array index) the alias came from.
+ */
+export function resolveAliasEdges(tree: TokenTreeNode): TokenEdge[] {
+  const tokensByPath = new Map<string, TokenNode>();
+  collectTokens(tree, tokensByPath);
+  return resolveEdgesFromTokenMap(tokensByPath);
+}
+
+/** One parsed file to merge via {@link resolveAliasEdgesAcrossFiles}. */
+export interface NamedTokenTree {
+  /** Identifier for this file (e.g. its path). Recorded on each token's `source` and used in collision error messages. */
+  source: string;
+  tree: TokenTreeNode;
+}
+
+/**
+ * Merge multiple parsed token trees into a single addressable token space, tagging each
+ * token's `source`, then resolve aliases (scalar and composite-member) against that merged
+ * space — so an alias in one file can point at a token defined in another.
+ *
+ * Throws a `DtcgParseError` if two files define a token at the same path.
+ */
+export function resolveAliasEdgesAcrossFiles(files: NamedTokenTree[]): TokenEdge[] {
+  const tokensByPath = new Map<string, TokenNode>();
+  for (const file of files) {
+    const fileTokens = new Map<string, TokenNode>();
+    collectTokens(file.tree, fileTokens);
+
+    for (const [path, token] of fileTokens) {
+      const existing = tokensByPath.get(path);
+      if (existing !== undefined) {
+        throw new DtcgParseError(
+          `Token "${path}" is defined in both "${existing.source}" and "${file.source}"`,
+          token.path,
+          GROUP_SPEC_URL,
+        );
+      }
+      tokensByPath.set(path, { ...token, source: file.source });
+    }
+  }
+  return resolveEdgesFromTokenMap(tokensByPath);
 }

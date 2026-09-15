@@ -3,24 +3,55 @@
   "version": "0.0.0",
   "description": "Parse Design Tokens Community Group (DTCG) files into a token tree",
   "license": "MIT",
+  "author": "Julien Déramond",
+  "homepage": "https://github.com/julien-deramond/dtgraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julien-deramond/dtgraph",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/julien-deramond/dtgraph/issues"
+  },
+  "keywords": [
+    "dtcg",
+    "design-tokens",
+    "design-system",
+    "parser",
+    "token-graph"
+  ],
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "devDependencies": {
+    "esbuild": "0.28.2",
+    "jsdom": "30.0.1",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -1,7 +1,7 @@
 import { DtcgParseError } from '@dtgraph/core';
 import { describe, expect, it } from 'vitest';
 
-import { renderStoryTokensToSvg } from '../src/render-story-graph.js';
+import { buildStoryTokenGraph, renderStoryTokensToSvg } from '../src/render-story-graph.js';
 
 describe('renderStoryTokensToSvg', () => {
   it('renders a single token document to SVG', () => {
@@ -41,5 +41,32 @@ describe('renderStoryTokensToSvg', () => {
     ];
 
     expect(() => renderStoryTokensToSvg(tokens)).toThrow(/is defined in both/);
+  });
+});
+
+describe('buildStoryTokenGraph', () => {
+  it('returns the resolved graph the panel mounts', () => {
+    const graph = buildStoryTokenGraph({
+      color: {
+        brand: { $type: 'color', $value: '#112233' },
+        accent: { $value: '{color.brand}' },
+      },
+    });
+    expect(graph.nodes.map((node) => node.path.join('.'))).toEqual(['color.brand', 'color.accent']);
+    expect(graph.getOutgoingEdges(['color', 'accent'])).toHaveLength(1);
+  });
+
+  it('resolves aliases across multiple documents', () => {
+    const graph = buildStoryTokenGraph([
+      { color: { brand: { $type: 'color', $value: '#112233' } } },
+      { color: { accent: { $value: '{color.brand}' } } },
+    ]);
+    expect(graph.edges).toHaveLength(1);
+  });
+
+  it('propagates a dangling-alias error unmodified', () => {
+    expect(() => buildStoryTokenGraph({ color: { accent: { $value: '{color.nope}' } } })).toThrow(
+      DtcgParseError,
+    );
   });
 });

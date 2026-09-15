@@ -5,7 +5,23 @@
  */
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+
+/** Vite-style `?raw` imports: the file's text as a string (used for style.css). */
+const rawImports = {
+  name: 'raw-imports',
+  setup(build) {
+    build.onResolve({ filter: /\?raw$/ }, (args) => ({
+      path: resolve(dirname(args.importer), args.path.replace(/\?raw$/, '')),
+      namespace: 'raw',
+    }));
+    build.onLoad({ filter: /.*/, namespace: 'raw' }, (args) => ({
+      contents: readFileSync(args.path, 'utf8'),
+      loader: 'text',
+    }));
+  },
+};
 
 const outDir = 'dist';
 
@@ -21,6 +37,7 @@ await build({
   format: 'esm',
   sourcemap: true,
   packages: 'external',
+  plugins: [rawImports],
 });
 
 copyFileSync('src/style.css', `${outDir}/style.css`);

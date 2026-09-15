@@ -1,28 +1,70 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useParameter } from 'storybook/manager-api';
+import { useTheme } from 'storybook/theming';
+
+import type { TokenGraph } from '@dtgraph/core';
+import { injectViewerStyles, mountTokenGraphViewer } from '@dtgraph/viewer';
+import type { TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
 
 import { PARAM_KEY } from './constants.js';
-import { renderStoryTokensToSvg, type DtgraphParameter } from './render-story-graph.js';
+import { buildStoryTokenGraph, type DtgraphParameter } from './render-story-graph.js';
+
+type GraphResult = { ok: true; graph: TokenGraph } | { ok: false; message: string | undefined };
 
 /**
- * The token graph panel: reads the active story's `dtgraph` parameter and renders the
- * resulting SVG. Re-renders automatically when the active story changes, since `useParameter`
- * subscribes to Storybook's manager state.
+ * Mount the interactive viewer into `container` as soon as it has a size, and tear it down on
+ * cleanup. Storybook keeps inactive panels in the DOM with no size, and the WebGL renderer
+ * refuses a zero-sized container, so mounting waits for the pane to actually be shown.
+ */
+function useTokenGraphViewer(
+  container: React.RefObject<HTMLDivElement | null>,
+  graph: TokenGraph | undefined,
+  theme: ViewerTheme,
+): void {
+  useEffect(() => {
+    const element = container.current;
+    if (element === null || graph === undefined) return undefined;
+    injectViewerStyles(element.ownerDocument);
+
+    let viewer: TokenGraphViewer | undefined;
+    const mountIfSized = (): void => {
+      if (viewer !== undefined || element.clientWidth === 0 || element.clientHeight === 0) return;
+      viewer = mountTokenGraphViewer(element, graph, { theme });
+    };
+    mountIfSized();
+    const observer =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(mountIfSized);
+    observer?.observe(element);
+
+    return () => {
+      observer?.disconnect();
+      viewer?.destroy();
+    };
+  }, [container, graph, theme]);
+}
+
+/**
+ * The token graph panel: reads the active story's `dtgraph` parameter and renders it with
+ * `@dtgraph/viewer`. Re-renders automatically when the active story changes, since
+ * `useParameter` subscribes to Storybook's manager state; follows the manager's light/dark theme.
  */
 export function Panel(): React.ReactElement {
   const parameter = useParameter<DtgraphParameter | undefined>(PARAM_KEY, undefined);
+  // Storybook's converted theme carries `base: 'light' | 'dark'` (typed loosely here to avoid
+  // depending on the theming package's type surface).
+  const theme: ViewerTheme = (useTheme() as { base?: string }).base === 'light' ? 'light' : 'dark';
+  const container = useRef<HTMLDivElement>(null);
 
-  const result = useMemo(() => {
-    if (parameter?.tokens === undefined) return { ok: false as const, message: undefined };
+  const result = useMemo<GraphResult>(() => {
+    if (parameter?.tokens === undefined) return { ok: false, message: undefined };
     try {
-      return { ok: true as const, svg: renderStoryTokensToSvg(parameter.tokens) };
+      return { ok: true, graph: buildStoryTokenGraph(parameter.tokens) };
     } catch (error) {
-      return {
-        ok: false as const,
-        message: error instanceof Error ? error.message : String(error),
-      };
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
     }
   }, [parameter]);
+
+  useTokenGraphViewer(container, result.ok ? result.graph : undefined, theme);
 
   if (parameter?.tokens === undefined) {
     return (
@@ -44,8 +86,7 @@ export function Panel(): React.ReactElement {
     );
   }
 
-  // Safe: renderTokenGraphToSvg (via renderStoryTokensToSvg) escapes every piece of
-  // token-derived text before returning, the same trust model as the website playground and
-  // <TokenGraph>'s use of set:html.
-  return <div style={{ padding: '1rem' }} dangerouslySetInnerHTML={{ __html: result.svg }} />;
+  // The viewer draws token text on a canvas and builds its panels with textContent — nothing
+  // from the tokens becomes markup, the same trust model as the playground and <TokenGraph>.
+  return <div ref={container} style={{ position: 'absolute', inset: 0 }} />;
 }

@@ -1,7 +1,7 @@
 import { circular } from 'graphology-layout';
 import forceAtlas2, { type ForceAtlas2Settings } from 'graphology-layout-forceatlas2';
 
-import type { ViewerGraph } from './build-graph.js';
+import { SMALL_GRAPH_ORDER, type ViewerGraph } from './build-graph.js';
 
 export interface LayoutOptions {
   /**
@@ -204,13 +204,74 @@ export function viewerExtent(graph: ViewerGraph): Extent | undefined {
 }
 
 /**
- * Compute positions in place: a deterministic circular seed, ForceAtlas2 so tokens that reference
- * each other pull into clusters (the Gephi look), then isolated tokens packed into per-group satellite discs outside.
+ * Dependency level of every node: 0 for tokens that reference nothing (primitives and isolates),
+ * else one more than the deepest token they reference. The graph is acyclic by construction;
+ * a visited set still guards the walk.
+ */
+export function dependencyLevels(graph: ViewerGraph): Map<string, number> {
+  const levels = new Map<string, number>();
+  const visiting = new Set<string>();
+  const level = (node: string): number => {
+    const known = levels.get(node);
+    if (known !== undefined) return known;
+    if (visiting.has(node)) return 0;
+    visiting.add(node);
+    let result = 0;
+    for (const target of graph.outNeighbors(node)) result = Math.max(result, level(target) + 1);
+    visiting.delete(node);
+    levels.set(node, result);
+    return result;
+  };
+  graph.forEachNode((node) => level(node));
+  return levels;
+}
+
+/**
+ * A tidy left-to-right layout for small graphs: primitives in the left column, each consumer
+ * one column right of the deepest token it references, rows ordered by group then path so
+ * related tokens sit together. With a couple dozen tokens this reads like a diagram, where a
+ * force layout would just scatter them.
+ */
+export function layoutLayered(graph: ViewerGraph): void {
+  const levels = dependencyLevels(graph);
+  const columns = new Map<number, string[]>();
+  graph.forEachNode((node) => {
+    const l = levels.get(node) ?? 0;
+    const column = columns.get(l);
+    if (column === undefined) columns.set(l, [node]);
+    else column.push(node);
+  });
+  const columnGap = 1;
+  const rowGap = 0.3;
+  for (const [l, nodes] of columns) {
+    nodes.sort((a, b) => {
+      const ga = graph.getNodeAttribute(a, 'group');
+      const gb = graph.getNodeAttribute(b, 'group');
+      return ga === gb ? a.localeCompare(b) : ga.localeCompare(gb);
+    });
+    nodes.forEach((node, index) => {
+      graph.mergeNodeAttributes(node, {
+        x: l * columnGap,
+        y: (index - (nodes.length - 1) / 2) * rowGap,
+      });
+    });
+  }
+}
+
+/**
+ * Compute positions in place. Small graphs get the layered diagram layout. Larger ones get a
+ * deterministic circular seed, ForceAtlas2 so tokens that reference each other pull into
+ * clusters (the Gephi look), then isolated tokens packed into per-group satellite discs outside.
  * Fully deterministic for a given graph — no randomness anywhere — so the same token set always
  * produces the same map.
  */
 export function layoutViewerGraph(graph: ViewerGraph, options: LayoutOptions = {}): void {
   if (graph.order === 0) return;
+
+  if (graph.order <= SMALL_GRAPH_ORDER) {
+    layoutLayered(graph);
+    return;
+  }
 
   circular.assign(graph, { scale: 1 });
 

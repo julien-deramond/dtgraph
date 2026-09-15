@@ -53,9 +53,12 @@ A token's `$value` can reference another token instead of a literal value, using
 `color.accent` now resolves to whatever `color.brand` is — change `brand`, and `accent` follows.
 This is exactly what dtgraph draws as an edge in the token graph. Here's this exact file,
 rendered live by dtgraph's own `<TokenGraph>` component (the same one this page's Getting
-started/CLI examples describe):
+started/CLI examples describe) — hover a token to spotlight what it relates to, click it for
+details:
 
 <TokenGraph
+  interactive
+  height="280px"
   tokens={{
     color: {
       brand: { $type: 'color', $value: '#3311ff' },
@@ -92,9 +95,12 @@ an alias. `border` is a good example:
 
 `border.focusring`'s `color` member is itself an alias to `color.focusring` — dtgraph draws this
 as an edge too, just tagged as a "composite-member" edge (dashed) instead of a plain alias
-(solid), so you can tell at a glance which kind of reference it is:
+(solid), so you can tell at a glance which kind of reference it is — click `border.focusring`
+below and the detail panel names the `color` member the reference comes from:
 
 <TokenGraph
+  interactive
+  height="280px"
   tokens={{
     color: {
       focusring: { $type: 'color', $value: '#2563eb' },

@@ -25,6 +25,63 @@ describe('TokenGraph.astro', () => {
     expect(html).toContain('color.accent');
   });
 
+  describe('interactive mode', () => {
+    it('ships the resolved graph as a non-executable JSON payload instead of the SVG', async () => {
+      const container = await AstroContainer.create();
+      const html = await container.renderToString(TokenGraph, {
+        props: {
+          interactive: true,
+          height: '300px',
+          theme: 'light',
+          colorBy: 'type',
+          tokens: {
+            color: {
+              brand: { $type: 'color', $value: '#112233' },
+              accent: { $value: '{color.brand}' },
+            },
+          },
+        },
+      });
+
+      expect(html).not.toContain('<svg');
+      expect(html).toContain('data-dtgraph-interactive');
+      expect(html).toContain('data-dtgraph-theme="light"');
+      expect(html).toContain('data-dtgraph-color-by="type"');
+      expect(html).toContain('data-dtgraph-chrome="true"');
+      expect(html).toContain('height: 300px');
+      expect(html).toContain('<script type="application/json" data-dtgraph-graph>');
+      const payload = /data-dtgraph-graph>(.*?)<\/script>/s.exec(html)?.[1] ?? '';
+      const parsed = JSON.parse(payload) as { nodes: unknown[]; edges: unknown[] };
+      expect(parsed.nodes).toHaveLength(2);
+      expect(parsed.edges).toHaveLength(1);
+      expect(parsed.edges[0]).toMatchObject({ from: ['color', 'accent'], to: ['color', 'brand'] });
+    });
+
+    it('escapes token text so it can never close the payload element', async () => {
+      const container = await AstroContainer.create();
+      const html = await container.renderToString(TokenGraph, {
+        props: {
+          interactive: true,
+          tokens: {
+            color: {
+              brand: {
+                $type: 'color',
+                $value: '#112233',
+                $description: '</script><script>alert(1)</script>',
+              },
+            },
+          },
+        },
+      });
+
+      expect(html).not.toContain('<script>alert(1)');
+      expect(html).toContain('\\u003c/script>\\u003cscript>alert(1)');
+      const payload = /data-dtgraph-graph>(.*?)<\/script>/s.exec(html)?.[1] ?? '';
+      const parsed = JSON.parse(payload) as { nodes: { description?: string }[] };
+      expect(parsed.nodes[0].description).toBe('</script><script>alert(1)</script>');
+    });
+  });
+
   it('throws a clear error when neither tokens nor a file is given', async () => {
     const container = await AstroContainer.create();
     await expect(container.renderToString(TokenGraph, { props: {} })).rejects.toThrow(

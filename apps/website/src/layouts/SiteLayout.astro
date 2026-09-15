@@ -42,8 +42,9 @@ const canonical = Astro.site === undefined ? undefined : new URL(Astro.url.pathn
     <meta name="theme-color" content="#17181c" media="(prefers-color-scheme: dark)" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <SiteHeader />
-    <main>
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <style>
@@ -52,6 +53,10 @@ const canonical = Astro.site === undefined ? undefined : new URL(Astro.url.pathn
         flex: 1 1 auto;
         flex-direction: column;
         min-height: 0;
+      }
+      /* The skip link focuses <main> to move the reading position; it is not itself a control. */
+      main:focus {
+        outline: none;
       }
     </style>
   </body>

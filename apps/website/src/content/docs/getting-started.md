@@ -6,9 +6,9 @@ order: 1
 
 ## Option 1: the playground (no install)
 
-Go to **[the playground](../../)** and drop a DTCG JSON file onto the page (or paste it into the
-"Or paste JSON" box). The resolved token graph renders immediately, entirely in your browser —
-nothing is uploaded anywhere.
+Go to **[the playground](../../)** and drop a DTCG JSON file onto the page (or click **Paste
+JSON** and paste it in). The resolved token graph renders immediately, entirely in your
+browser — nothing is uploaded anywhere.
 
 This is the fastest way to check a file you already have open, or to see what dtgraph does
 before installing anything.

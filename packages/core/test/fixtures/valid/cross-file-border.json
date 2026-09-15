@@ -1,0 +1,18 @@
+{
+  "border": {
+    "accent": {
+      "$type": "border",
+      "$value": {
+        "color": "{color.brand}",
+        "width": "{spacing.small}",
+        "style": "solid"
+      }
+    }
+  },
+  "color": {
+    "accent-alias": {
+      "$type": "color",
+      "$value": "{color.brand}"
+    }
+  }
+}

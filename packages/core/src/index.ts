@@ -1,6 +1,7 @@
 export { DtcgParseError } from './errors.js';
 export { parseTokenTree } from './parse.js';
-export { resolveAliasEdges } from './resolve.js';
+export { resolveAliasEdges, resolveAliasEdgesAcrossFiles } from './resolve.js';
+export type { NamedTokenTree } from './resolve.js';
 export type {
   Aliasable,
   AliasReference,

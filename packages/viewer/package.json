@@ -60,8 +60,8 @@
     "esbuild": "0.28.2",
     "graphology-types": "0.24.8",
     "jsdom": "30.0.1",
-    "typescript": "5.9.3",
-    "vitest": "3.2.4"
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
   },
   "engines": {
     "node": ">=20"

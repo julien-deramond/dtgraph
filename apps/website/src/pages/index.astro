@@ -186,8 +186,11 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     }
     .hint {
       position: absolute;
-      left: 0.75rem;
+      left: 50%;
       bottom: 0.75rem;
+      transform: translateX(-50%);
+      max-width: calc(100% - 2rem);
+      text-align: center;
       padding: 0.35rem 0.6rem;
       border-radius: 999px;
       color: rgba(255, 255, 255, 0.7);

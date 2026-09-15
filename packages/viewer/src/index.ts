@@ -17,6 +17,8 @@ export type {
 } from './build-graph.js';
 export {
   defaultIterations,
+  dependencyLevels,
+  layoutLayered,
   forceAtlas2Settings,
   layoutViewerGraph,
   placeIsolatesAsSatellites,
@@ -31,5 +33,6 @@ export { searchTokens } from './search.js';
 export type { SearchHit } from './search.js';
 export { resolveValue, swatchColor } from './resolve-value.js';
 export type { ResolvedValue } from './resolve-value.js';
+export { injectViewerStyles, VIEWER_CSS } from './inject-styles.js';
 export { THEMES } from './theme.js';
 export type { ThemeColors, ViewerTheme } from './theme.js';

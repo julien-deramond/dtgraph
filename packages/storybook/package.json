@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Storybook addon: view a story's DTCG token graph in a panel",
   "license": "MIT",
-  "author": "Julien Déramond",
+  "author": "Julien D\u00e9ramond",
   "homepage": "https://github.com/julien-deramond/dtgraph#readme",
   "repository": {
     "type": "git",
@@ -52,7 +52,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@dtgraph/core": "workspace:^"
+    "@dtgraph/core": "workspace:^",
+    "@dtgraph/viewer": "workspace:^"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

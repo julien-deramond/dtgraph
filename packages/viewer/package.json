@@ -1,6 +1,6 @@
 {
   "name": "@dtgraph/viewer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Interactive WebGL explorer for DTCG token graphs: zoomable map, clusters, search, focus",
   "license": "MIT",
   "author": "Julien Déramond",

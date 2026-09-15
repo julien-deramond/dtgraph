@@ -3,6 +3,7 @@ import type { TokenEdge, TokenNode, TokenTreeNode } from './types.js';
 
 const ALIAS_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/#aliases-references';
 const GROUP_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/#groups';
+const CIRCULAR_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/#circular-references';
 
 const ALIAS_PATTERN = /^\{([^{}]+)\}$/;
 
@@ -103,6 +104,61 @@ function collectCompositeMemberEdges(
   }
 }
 
+/**
+ * Reject a set of edges that contains an alias cycle (direct, e.g. A → B → A, or indirect,
+ * e.g. A → B → C → A). Runs a DFS over `from -> to`, reporting the full cycle path in the
+ * error the moment a node still on the current DFS stack ("gray") is revisited.
+ */
+function detectAliasCycle(edges: TokenEdge[]): void {
+  const edgesByFrom = new Map<string, TokenEdge[]>();
+  for (const edge of edges) {
+    const from = edge.from.join('.');
+    const outgoing = edgesByFrom.get(from);
+    if (outgoing === undefined) {
+      edgesByFrom.set(from, [edge]);
+    } else {
+      outgoing.push(edge);
+    }
+  }
+
+  const UNVISITED = 0;
+  const IN_PROGRESS = 1;
+  const DONE = 2;
+  const state = new Map<string, 0 | 1 | 2>();
+  const stack: string[] = [];
+
+  function visit(node: string): void {
+    state.set(node, IN_PROGRESS);
+    stack.push(node);
+
+    for (const edge of edgesByFrom.get(node) ?? []) {
+      const next = edge.to.join('.');
+      const nextState = state.get(next) ?? UNVISITED;
+      if (nextState === IN_PROGRESS) {
+        const cycleStart = stack.indexOf(next);
+        const cyclePath = [...stack.slice(cycleStart), next];
+        throw new DtcgParseError(
+          `Alias cycle detected: ${cyclePath.join(' → ')}`,
+          cyclePath[0].split('.'),
+          CIRCULAR_SPEC_URL,
+        );
+      }
+      if (nextState === UNVISITED) {
+        visit(next);
+      }
+    }
+
+    stack.pop();
+    state.set(node, DONE);
+  }
+
+  for (const node of edgesByFrom.keys()) {
+    if ((state.get(node) ?? UNVISITED) === UNVISITED) {
+      visit(node);
+    }
+  }
+}
+
 function resolveEdgesFromTokenMap(tokensByPath: Map<string, TokenNode>): TokenEdge[] {
   const edges: TokenEdge[] = [];
   for (const token of tokensByPath.values()) {
@@ -116,6 +172,7 @@ function resolveEdgesFromTokenMap(tokensByPath: Map<string, TokenNode>): TokenEd
 
     collectCompositeMemberEdges(token, token.value, undefined, tokensByPath, edges);
   }
+  detectAliasCycle(edges);
   return edges;
 }
 
@@ -128,6 +185,10 @@ function resolveEdgesFromTokenMap(tokensByPath: Map<string, TokenNode>): TokenEd
  * `$value`s (an object like `border`/`typography`, or an array like a layered `shadow`) are
  * walked one level deep for member aliases, producing `kind: "composite-member"` edges
  * tagged with which member (or array index) the alias came from.
+ *
+ * Rejects the graph — rather than silently truncating it — if the resulting edges contain an
+ * alias cycle (direct or indirect), so callers can trust the returned edges are never in an
+ * ambiguous state.
  */
 export function resolveAliasEdges(tree: TokenTreeNode): TokenEdge[] {
   const tokensByPath = new Map<string, TokenNode>();

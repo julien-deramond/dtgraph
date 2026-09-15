@@ -71,6 +71,24 @@ describe('resolveAliasEdges', () => {
     expect(resolveAliasEdges(tree)).toEqual([]);
   });
 
+  it('rejects a direct alias cycle (A -> B -> A)', () => {
+    const tree = parseTokenTree(loadFixture('invalid', 'alias-cycle-direct.json'));
+
+    expect(() => resolveAliasEdges(tree)).toThrow(DtcgParseError);
+    expect(() => resolveAliasEdges(tree)).toThrow(
+      /Alias cycle detected: color\.a → color\.b → color\.a/,
+    );
+  });
+
+  it('rejects an indirect alias cycle (A -> B -> C -> A)', () => {
+    const tree = parseTokenTree(loadFixture('invalid', 'alias-cycle-indirect.json'));
+
+    expect(() => resolveAliasEdges(tree)).toThrow(DtcgParseError);
+    expect(() => resolveAliasEdges(tree)).toThrow(
+      /Alias cycle detected: color\.a → color\.b → color\.c → color\.a/,
+    );
+  });
+
   it('resolves a member-level alias inside an object composite value', () => {
     const tree = parseTokenTree(loadFixture('valid', 'composite-typography.json'));
     const edges = resolveAliasEdges(tree);

@@ -12,7 +12,7 @@
   class="btn btn--ghost btn--icon theme-toggle"
   data-theme-toggle
   aria-label="Switch to dark theme"
-  title="Switch theme"
+  title="Switch to dark theme"
 >
   <svg class="theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true">
     <circle cx="12" cy="12" r="4"></circle>
@@ -69,7 +69,12 @@
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
   const sync = (): void => {
     const next = resolveSiteTheme() === 'dark' ? 'light' : 'dark';
-    for (const button of buttons) button.setAttribute('aria-label', `Switch to ${next} theme`);
+    // The tooltip and the accessible name are the same sentence: a title that says something
+    // else is a second, contradictory label for the same control.
+    for (const button of buttons) {
+      button.setAttribute('aria-label', `Switch to ${next} theme`);
+      button.setAttribute('title', `Switch to ${next} theme`);
+    }
   };
   for (const button of buttons) {
     button.addEventListener('click', () => {

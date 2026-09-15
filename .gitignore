@@ -24,3 +24,6 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Agent tooling: locally installed skills and agents, and the worktrees they run in
+.claude/

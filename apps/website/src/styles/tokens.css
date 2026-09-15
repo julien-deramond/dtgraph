@@ -64,6 +64,22 @@
   --leading-tight: 1.25;
   --leading-normal: 1.65;
 
+  /*
+   * Prose runs one step larger and looser than the app chrome: the docs are read, the
+   * playground's toolbar is operated, and the density that suits a toolbar is tiring in a
+   * paragraph. `--measure` caps running text at a comfortable line length; the docs column
+   * itself (`--content-width`) stays wide enough for 80-column CLI output, so code blocks and
+   * tables keep the full column while paragraphs stop short of it.
+   */
+  --text-prose: 1rem;
+  --leading-prose: 1.7;
+  /*
+   * ~72 characters at --text-prose. Not expressed in `ch`: that unit is the width of "0",
+   * which in a proportional face runs a fifth wider than the average letter, so `70ch` here
+   * measured out at 86 characters a line.
+   */
+  --measure: 37rem;
+
   /* Shape */
   --radius-sm: 0.35rem;
   --radius-md: 0.5rem;
@@ -73,7 +89,7 @@
   /* Layout */
   --header-height: 3.25rem;
   --gutter: 1.5rem;
-  --content-width: 46rem;
+  --content-width: 42rem;
   --sidebar-width: 15rem;
   --toc-width: 13rem;
 

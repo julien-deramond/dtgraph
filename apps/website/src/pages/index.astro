@@ -4,7 +4,13 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
 <SiteLayout title="Playground">
   <div class="playground">
-    <div class="toolbar" role="toolbar" aria-label="Playground controls">
+    {/* The page is one full-bleed tool, so its heading is spoken rather than drawn. */}
+    <h1 class="visually-hidden">DTCG token graph playground</h1>
+    {/*
+      A labelled region, not role="toolbar": that role promises arrow-key navigation between
+      the controls, and these are ordinary tab stops.
+    */}
+    <div class="toolbar" role="group" aria-label="Playground controls">
       <div class="toolbar__group">
         <button id="open-files" type="button" class="btn btn--primary">Open files…</button>
         <input id="file-input" type="file" accept="application/json,.json" multiple hidden />
@@ -20,8 +26,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       <div class="toolbar__group">
         <div class="segmented" role="group" aria-label="Color tokens by">
           <span class="segmented__label">Color by</span>
-          <button type="button" data-color-by="group" aria-pressed="true">Group</button>
-          <button type="button" data-color-by="type" aria-pressed="false">Type</button>
+          <button type="button" class="btn" data-color-by="group" aria-pressed="true">Group</button>
+          <button type="button" class="btn" data-color-by="type" aria-pressed="false">Type</button>
         </div>
         <button id="fit" type="button" class="btn">Fit</button>
         <button id="export-svg" type="button" class="btn">Export SVG</button>
@@ -32,10 +38,16 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
     <div class="stage">
       <div id="graph-output" class="canvas"></div>
-      <div class="hint" aria-hidden="true">
-        Drag to pan · Scroll to zoom · Hover to spotlight · Double-click to dive in · Drop DTCG
-        files anywhere
-      </div>
+      {/*
+        How the map is driven — the only place it is stated, so it stays readable to assistive
+        technology instead of being decoration. The middle two gestures drop out on a phone,
+        where they do not apply and the full string covered a quarter of the canvas.
+      */}
+      <p id="hint" class="hint" hidden>
+        Drag to pan · Pinch or scroll to zoom<span class="hint__wide">
+           · Hover to spotlight · Double-click to dive in</span
+        > · Drop DTCG files anywhere
+      </p>
       <div id="context-prompt" class="prompt" role="status" hidden></div>
       <div id="drop-overlay" class="drop-overlay" hidden>
         <div class="drop-overlay__card">Drop DTCG JSON file(s) to render them</div>
@@ -162,17 +174,10 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
-    .segmented button {
-      padding: 0.4rem 0.75rem;
-      border: 1px solid var(--line);
-      color: inherit;
-      background: var(--surface);
-      line-height: 1.2;
-      cursor: pointer;
-    }
-    .segmented button:hover {
-      background: var(--surface-muted);
-    }
+    /*
+     * The two halves are ordinary .btn controls (global.css owns their padding, border, hover
+     * and focus); only the joined radii and the pressed state belong to the group.
+     */
     .segmented {
       display: inline-flex;
       align-items: center;
@@ -181,17 +186,15 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     .segmented__label {
       color: var(--muted);
     }
-    .segmented button {
-      border-radius: 0;
-    }
-    .segmented button:nth-of-type(1) {
+    .segmented .btn:nth-of-type(1) {
       border-radius: var(--radius-md) 0 0 var(--radius-md);
     }
-    .segmented button:nth-of-type(2) {
+    .segmented .btn:nth-of-type(2) {
       margin-left: -1px;
       border-radius: 0 var(--radius-md) var(--radius-md) 0;
     }
-    .segmented button[aria-pressed='true'] {
+    .segmented .btn[aria-pressed='true'] {
+      position: relative;
       color: var(--bg);
       background: var(--fg-strong);
       border-color: var(--fg-strong);
@@ -214,23 +217,37 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       position: absolute;
       inset: 0;
     }
+    /*
+     * The pill floats over the canvas, which is drawn in the site theme, so it is built from
+     * the same surface tokens as everything else rather than from two hand-mixed rgba pairs —
+     * one per theme — that matched neither.
+     */
     .hint {
       position: absolute;
       left: 50%;
       bottom: 0.75rem;
       transform: translateX(-50%);
       max-width: calc(100% - 2rem);
+      margin: 0;
       text-align: center;
-      padding: 0.35rem 0.6rem;
+      text-wrap: balance;
+      padding: 0.3rem 0.75rem;
+      border: 1px solid var(--line);
       border-radius: var(--radius-pill);
-      color: rgba(255, 255, 255, 0.7);
-      background: rgba(0, 0, 0, 0.45);
-      font-size: 0.75rem;
+      color: var(--muted);
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      font-size: var(--text-xs);
+      line-height: 1.5;
       pointer-events: none;
     }
-    .canvas[data-theme='light'] + .hint {
-      color: rgba(0, 0, 0, 0.6);
-      background: rgba(255, 255, 255, 0.7);
+    .hint[hidden] {
+      display: none;
+    }
+    /* Hover and double-click have no phone equivalent, and the full string ate the canvas. */
+    @media (max-width: 600px), (hover: none) {
+      .hint__wide {
+        display: none;
+      }
     }
     .prompt {
       position: absolute;
@@ -361,6 +378,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const dropOverlay = $<HTMLElement>('drop-overlay');
     const pasteDialog = $<HTMLDialogElement>('paste-dialog');
     const pasteInput = $<HTMLTextAreaElement>('paste-input');
+    const fitButton = $<HTMLButtonElement>('fit');
+    const exportButton = $<HTMLButtonElement>('export-svg');
+    const hint = $<HTMLElement>('hint');
     const colorButtons = Array.from(
       document.querySelectorAll<HTMLButtonElement>('button[data-color-by]'),
     );
@@ -512,6 +532,12 @@ import SiteLayout from '../layouts/SiteLayout.astro';
         graph === undefined
           ? ''
           : `${count(graph.nodes.length, 'token')} · ${count(graph.edges.length, 'edge')}`;
+      // Nothing rendered — a file failed to parse, or a resolver is still waiting on a
+      // context — so there is nothing to fit, export, or pan around. Say so instead of
+      // ignoring the click and advertising gestures over an empty canvas.
+      fitButton.disabled = graph === undefined;
+      exportButton.disabled = graph === undefined;
+      hint.hidden = graph === undefined;
     }
 
     function load(files: { source: string; content: string }[]): void {
@@ -578,9 +604,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       playground.remount();
     });
 
-    $('fit').addEventListener('click', () => viewer?.fit());
+    fitButton.addEventListener('click', () => viewer?.fit());
 
-    $('export-svg').addEventListener('click', () => {
+    exportButton.addEventListener('click', () => {
       const svg = playground.exportSvg();
       if (svg === undefined) return;
       const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));

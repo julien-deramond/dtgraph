@@ -22,10 +22,16 @@ export interface Props {
 
 const { page, pages, headings } = Astro.props;
 const { previous, next } = docsNeighbors(pages, page.id);
+/*
+ * TableOfContents renders nothing below two headings, and the overview page has none at all.
+ * The grid has to know that here: a reserved-but-empty third column pushed the article off
+ * centre under a blank gutter.
+ */
+const hasToc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3).length > 0;
 ---
 
 <SiteLayout title={page.title} description={page.description}>
-  <div class="docs">
+  <div class:list={['docs', { 'docs--with-toc': hasToc }]}>
     <aside class="docs__sidebar">
       <DocsNav pages={pages} currentId={page.id} />
     </aside>
@@ -39,23 +45,31 @@ const { previous, next } = docsNeighbors(pages, page.id);
       </div>
       <Pagination previous={previous} next={next} />
     </article>
-    <aside class="docs__toc">
-      <TableOfContents headings={headings} />
-    </aside>
+    {
+      hasToc && (
+        <aside class="docs__toc">
+          <TableOfContents headings={headings} />
+        </aside>
+      )
+    }
   </div>
 </SiteLayout>
 
 <style>
   .docs {
     display: grid;
-    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
     gap: 3rem;
     width: 100%;
+    max-width: calc(var(--sidebar-width) + var(--content-width) + 3rem + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 2rem var(--gutter) 4rem;
+  }
+  .docs--with-toc {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
     max-width: calc(
       var(--sidebar-width) + var(--content-width) + var(--toc-width) + 6rem + 2 * var(--gutter)
     );
-    margin: 0 auto;
-    padding: 2rem var(--gutter) 4rem;
   }
   .docs__sidebar,
   .docs__toc {
@@ -82,12 +96,15 @@ const { previous, next } = docsNeighbors(pages, page.id);
     color: var(--fg-strong);
   }
   .docs__lead {
+    max-width: var(--measure);
     margin: 0;
     color: var(--muted);
-    font-size: var(--text-md);
+    font-size: var(--text-lg);
+    line-height: var(--leading-tight);
+    text-wrap: pretty;
   }
   @media (max-width: 1100px) {
-    .docs {
+    .docs--with-toc {
       grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
     }
     .docs__toc {
@@ -95,7 +112,8 @@ const { previous, next } = docsNeighbors(pages, page.id);
     }
   }
   @media (max-width: 900px) {
-    .docs {
+    .docs,
+    .docs--with-toc {
       grid-template-columns: minmax(0, 1fr);
       gap: 1.25rem;
       padding-top: 1.25rem;
@@ -112,33 +130,48 @@ const { previous, next } = docsNeighbors(pages, page.id);
 </style>
 
 <style is:global>
+  /*
+   * The docs are read, not operated, so the article runs a step larger and looser than the
+   * site chrome. `--measure` holds running text to a comfortable line length while code
+   * blocks, tables and the embedded graphs keep the full column, which has to stay wide
+   * enough for 80-column CLI output.
+   */
+  .prose {
+    font-size: var(--text-prose);
+    line-height: var(--leading-prose);
+  }
   .prose > :first-child {
     margin-top: 0;
   }
   .prose h2,
   .prose h3,
   .prose h4 {
+    max-width: var(--measure);
     color: var(--fg-strong);
     line-height: var(--leading-tight);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
     scroll-margin-top: calc(var(--header-height) + 1rem);
   }
   .prose h2 {
-    margin: 2.5rem 0 0.75rem;
-    font-size: var(--text-lg);
+    margin: 3rem 0 0.85rem;
+    font-size: var(--text-xl);
   }
   .prose h3 {
-    margin: 1.75rem 0 0.5rem;
-    font-size: var(--text-md);
+    margin: 2rem 0 0.6rem;
+    font-size: var(--text-lg);
   }
   .prose h4 {
     margin: 1.5rem 0 0.5rem;
-    font-size: var(--text-base);
+    font-size: var(--text-md);
   }
   .prose p,
   .prose ul,
   .prose ol,
   .prose blockquote {
+    max-width: var(--measure);
     margin: 0 0 1rem;
+    text-wrap: pretty;
   }
   .prose ul,
   .prose ol {
@@ -175,9 +208,10 @@ const { previous, next } = docsNeighbors(pages, page.id);
     background: none;
     font-size: inherit;
   }
+  /* A hairline rule and real indentation, not a slab of accent down the side. */
   .prose blockquote {
-    padding: 0.25rem 1rem;
-    border-left: 3px solid var(--line-strong);
+    padding: 0.15rem 0 0.15rem 1.25rem;
+    border-left: 1px solid var(--line-strong);
     color: var(--muted);
   }
   .prose hr {

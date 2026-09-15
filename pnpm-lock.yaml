@@ -161,6 +161,9 @@ importers:
       '@dtgraph/core':
         specifier: workspace:^
         version: link:../core
+      '@dtgraph/viewer':
+        specifier: workspace:^
+        version: link:../viewer
     devDependencies:
       astro:
         specifier: 7.3.2

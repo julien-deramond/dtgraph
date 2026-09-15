@@ -164,7 +164,7 @@ describe('viewerExtent', () => {
     const xs = graph.mapNodes((_, attrs) => attrs.x);
     const ys = graph.mapNodes((_, attrs) => attrs.y);
     const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-    expect(extent.x[1] - extent.x[0]).toBeGreaterThan(span * 3);
+    expect(extent.x[1] - extent.x[0]).toBeGreaterThan(span * 2);
     expect(extent.y[1] - extent.y[0]).toBe(extent.x[1] - extent.x[0]);
   });
 

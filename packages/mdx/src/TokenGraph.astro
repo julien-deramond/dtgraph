@@ -25,9 +25,35 @@ export interface Props {
   file?: string;
   /** Multiple file paths (see `file`) — aliases resolve across all of them, same as the CLI. */
   files?: string[];
+  /**
+   * Render the interactive map (`@dtgraph/viewer`) instead of the static SVG: pan, zoom, hover,
+   * search, and a detail panel, hydrated on the client. The graph is still parsed and resolved
+   * at build time; only the resolved nodes/edges ship to the browser.
+   */
+  interactive?: boolean;
+  /** Interactive only: CSS height of the map. Defaults to `480px`. */
+  height?: string;
+  /**
+   * Interactive only: `"auto"` (default) follows `<html data-theme="…">` when the site sets it
+   * (Starlight does) and `prefers-color-scheme` otherwise, live; or force `"dark"`/`"light"`.
+   */
+  theme?: 'auto' | 'dark' | 'light';
+  /** Interactive only: color tokens by top-level group (default) or by `$type`. */
+  colorBy?: 'group' | 'type';
+  /** Interactive only: show the search box, legend and detail panel. Defaults to `true`. */
+  chrome?: boolean;
 }
 
-const { tokens, file, files } = Astro.props;
+const {
+  tokens,
+  file,
+  files,
+  interactive = false,
+  height = '480px',
+  theme = 'auto',
+  colorBy = 'group',
+  chrome = true,
+} = Astro.props;
 
 const namedTrees: NamedTokenTree[] = [];
 if (tokens !== undefined) {
@@ -46,8 +72,98 @@ if (namedTrees.length === 0) {
 
 const nodes = namedTrees.flatMap(({ tree }) => flattenTokenTree(tree));
 const edges = resolveAliasEdgesAcrossFiles(namedTrees);
-const svg = renderTokenGraphToSvg(buildTokenGraph(nodes, edges));
+const graph = buildTokenGraph(nodes, edges);
+
+// Static mode: the SVG is safe as-is — renderTokenGraphToSvg escapes every piece of
+// token-derived text it contains.
+const svg = interactive ? undefined : renderTokenGraphToSvg(graph);
+
+// Interactive mode: the resolved graph rides along as JSON in a non-executable script element.
+// `<`, U+2028 and U+2029 are escaped so no token text can close the element or break parsing,
+// whatever the token file contains.
+const payload = interactive
+  ? JSON.stringify({ nodes: graph.nodes, edges: graph.edges })
+      .replace(/</g, '\\u003c')
+      .replace(/\u2028/g, '\\u2028')
+      .replace(/\u2029/g, '\\u2029')
+  : undefined;
 ---
 
-{/* svg is safe: renderTokenGraphToSvg escapes every piece of token-derived text it contains. */}
-<Fragment set:html={svg} />
+{svg !== undefined && <Fragment set:html={svg} />}
+{
+  payload !== undefined && (
+    <div
+      class="dtgraph-mdx"
+      data-dtgraph-interactive
+      data-dtgraph-theme={theme}
+      data-dtgraph-color-by={colorBy}
+      data-dtgraph-chrome={String(chrome)}
+      style={`height: ${height}`}
+    >
+      <script type="application/json" data-dtgraph-graph set:html={payload}></script>
+    </div>
+  )
+}
+
+<style>
+  .dtgraph-mdx {
+    position: relative;
+    width: 100%;
+    margin: 1rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  import { buildTokenGraph } from '@dtgraph/core';
+  import type { TokenEdge, TokenNode } from '@dtgraph/core';
+  import { injectViewerStyles, mountTokenGraphViewer } from '@dtgraph/viewer';
+  import type { ColorBy, TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
+
+  function resolveTheme(preference: string | undefined): ViewerTheme {
+    if (preference === 'dark' || preference === 'light') return preference;
+    const site = document.documentElement.dataset.theme;
+    if (site === 'dark' || site === 'light') return site;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function hydrate(container: HTMLElement): void {
+    const source = container.querySelector<HTMLScriptElement>('script[data-dtgraph-graph]');
+    if (source === null) return;
+    const { nodes, edges } = JSON.parse(source.textContent ?? '{}') as {
+      nodes: TokenNode[];
+      edges: TokenEdge[];
+    };
+    const graph = buildTokenGraph(nodes, edges);
+    const preference = container.dataset.dtgraphTheme;
+    const colorBy = (container.dataset.dtgraphColorBy ?? 'group') as ColorBy;
+    const chrome = container.dataset.dtgraphChrome !== 'false';
+
+    let viewer: TokenGraphViewer | undefined;
+    let current: ViewerTheme | undefined;
+    const mount = (): void => {
+      const theme = resolveTheme(preference);
+      if (theme === current) return;
+      viewer?.destroy();
+      current = theme;
+      viewer = mountTokenGraphViewer(container, graph, { theme, colorBy, chrome });
+    };
+    mount();
+
+    if (preference !== 'dark' && preference !== 'light') {
+      new MutationObserver(mount).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      });
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', mount);
+    }
+  }
+
+  injectViewerStyles();
+  for (const container of document.querySelectorAll<HTMLElement>('[data-dtgraph-interactive]')) {
+    if (container.dataset.dtgraphMounted === 'true') continue;
+    container.dataset.dtgraphMounted = 'true';
+    hydrate(container);
+  }
+</script>

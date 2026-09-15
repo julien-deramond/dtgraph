@@ -1,0 +1,6 @@
+{
+  "color": {
+    "$notAThing": true,
+    "brand": { "$value": "#ff0000" }
+  }
+}

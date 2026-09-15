@@ -1,0 +1,7 @@
+{
+  "color": {
+    "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+    "$type": "color",
+    "brand": { "$value": "#ff0000" }
+  }
+}

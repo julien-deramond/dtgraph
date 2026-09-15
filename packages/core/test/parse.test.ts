@@ -68,6 +68,27 @@ describe('parseTokenTree', () => {
     expect(tree.path).toEqual([]);
   });
 
+  it('accepts $schema on the root group and keeps it out of the tree', () => {
+    const tree = parseTokenTree(loadFixture('valid', 'root-schema.json')) as GroupNode;
+
+    expect(Object.keys(tree.children)).toEqual(['color']);
+    const brand = (tree.children.color as GroupNode).children.brand as TokenNode;
+    expect(brand.value).toBe('#ff0000');
+    expect(brand.type).toBe('color');
+  });
+
+  it('rejects $schema on a nested group', () => {
+    expect(() => parseTokenTree(loadFixture('invalid', 'nested-schema.json'))).toThrow(
+      /"\$schema" is only allowed at the document root/,
+    );
+  });
+
+  it('rejects an unknown reserved property on a group', () => {
+    expect(() => parseTokenTree(loadFixture('invalid', 'unknown-group-property.json'))).toThrow(
+      /Unknown reserved property "\$notAThing"/,
+    );
+  });
+
   it('rejects a token that also declares child properties', () => {
     expect(() => parseTokenTree(loadFixture('invalid', 'token-with-children.json'))).toThrow(
       DtcgParseError,

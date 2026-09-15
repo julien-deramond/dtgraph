@@ -1,6 +1,6 @@
 {
   "name": "@dtgraph/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Parse Design Tokens Community Group (DTCG) files into a token tree",
   "license": "MIT",
   "author": "Julien Déramond",

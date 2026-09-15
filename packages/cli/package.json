@@ -1,6 +1,6 @@
 {
   "name": "dtgraph",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "CLI for rendering and validating DTCG design token files with dtgraph",
   "license": "MIT",
   "author": "Julien Déramond",

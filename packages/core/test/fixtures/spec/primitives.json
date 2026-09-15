@@ -1,0 +1,64 @@
+{
+  "color": {
+    "brand-primary": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [0.2, 0.4, 0.9] }
+    }
+  },
+  "dimension": {
+    "spacing-stack-0": {
+      "$value": { "value": 0, "unit": "px" },
+      "$type": "dimension"
+    },
+    "spacing-stack-1": {
+      "$value": { "value": 0.5, "unit": "rem" },
+      "$type": "dimension"
+    }
+  },
+  "font-family": {
+    "primary-font": {
+      "$value": "Comic Sans MS",
+      "$type": "fontFamily"
+    },
+    "body-font": {
+      "$value": ["Helvetica", "Arial", "sans-serif"],
+      "$type": "fontFamily"
+    }
+  },
+  "font-weight": {
+    "font-weight-default": {
+      "$value": 350,
+      "$type": "fontWeight"
+    },
+    "font-weight-thick": {
+      "$value": "extra-bold",
+      "$type": "fontWeight"
+    }
+  },
+  "duration": {
+    "duration-quick": {
+      "$value": { "value": 100, "unit": "ms" },
+      "$type": "duration"
+    },
+    "duration-long": {
+      "$value": { "value": 1.5, "unit": "s" },
+      "$type": "duration"
+    }
+  },
+  "cubic-bezier": {
+    "accelerate": {
+      "$value": [0.5, 0, 1, 1],
+      "$type": "cubicBezier"
+    },
+    "decelerate": {
+      "$value": [0, 0, 0.5, 1],
+      "$type": "cubicBezier"
+    }
+  },
+  "number": {
+    "line-height-base": {
+      "$value": 1.5,
+      "$type": "number"
+    }
+  }
+}

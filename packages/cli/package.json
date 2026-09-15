@@ -1,0 +1,51 @@
+{
+  "name": "dtgraph",
+  "version": "0.0.0",
+  "description": "CLI for rendering and validating DTCG design token files with dtgraph",
+  "license": "MIT",
+  "author": "Julien Déramond",
+  "homepage": "https://github.com/julien-deramond/dtgraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julien-deramond/dtgraph",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/julien-deramond/dtgraph/issues"
+  },
+  "keywords": [
+    "dtcg",
+    "design-tokens",
+    "design-system",
+    "cli",
+    "token-graph"
+  ],
+  "type": "module",
+  "bin": {
+    "dtgraph": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dtgraph/core": "workspace:^",
+    "commander": "15.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.5.1",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

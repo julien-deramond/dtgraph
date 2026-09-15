@@ -1,0 +1,21 @@
+{
+  "name": "examples-mdx-astro",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Minimal runnable example of @dtgraph/mdx's <TokenGraph> component",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "8.0.1",
+    "@dtgraph/core": "workspace:^",
+    "@dtgraph/mdx": "workspace:^",
+    "astro": "7.3.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

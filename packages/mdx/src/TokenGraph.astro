@@ -16,9 +16,11 @@ export interface Props {
   tokens?: unknown;
   /**
    * Path to a DTCG JSON file to read at build time, resolved relative to the current working
-   * directory (typically the Astro project root) — pass
-   * `new URL('./tokens.json', import.meta.url).pathname` for a path relative to the MDX/Astro
-   * file itself instead.
+   * directory (typically the Astro project root — the directory the `astro dev`/`astro build`
+   * command runs from). A path relative to the importing file itself (e.g. via
+   * `import.meta.url`) is not reliable here: Astro bundles and relocates frontmatter scripts
+   * at build time, which breaks paths resolved that way in the production build even though
+   * they may appear to work in `astro dev`.
    */
   file?: string;
   /** Multiple file paths (see `file`) — aliases resolve across all of them, same as the CLI. */

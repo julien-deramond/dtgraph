@@ -67,6 +67,21 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@26.5.1)(jsdom@30.0.1)(lightningcss@1.33.0)(yaml@2.9.1)
 
+  examples/mdx-astro:
+    dependencies:
+      '@astrojs/mdx':
+        specifier: 8.0.1
+        version: 8.0.1(@astrojs/markdown-satteri@0.4.1)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(yaml@2.9.1))
+      '@dtgraph/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@dtgraph/mdx':
+        specifier: workspace:^
+        version: link:../../packages/mdx
+      astro:
+        specifier: 7.3.2
+        version: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(yaml@2.9.1)
+
   packages/cli:
     dependencies:
       '@dtgraph/core':
@@ -3207,6 +3222,13 @@ snapshots:
       '@astrojs/internal-helpers': 0.11.0
       '@astrojs/markdown-satteri': 0.4.1
       astro: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.5.1)(yaml@2.9.1)
+      es-module-lexer: 2.3.2
+
+  '@astrojs/mdx@8.0.1(@astrojs/markdown-satteri@0.4.1)(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(yaml@2.9.1))':
+    dependencies:
+      '@astrojs/internal-helpers': 0.11.0
+      '@astrojs/markdown-satteri': 0.4.1
+      astro: 7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(yaml@2.9.1)
       es-module-lexer: 2.3.2
 
   '@astrojs/prism@4.0.2':

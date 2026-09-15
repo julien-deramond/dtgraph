@@ -1,0 +1,18 @@
+import TokenGraph from '@dtgraph/mdx/TokenGraph.astro';
+
+# @dtgraph/mdx example
+
+## Inline tokens
+
+<TokenGraph
+  tokens={{
+    color: {
+      brand: { $type: 'color', $value: '#3311ff' },
+      accent: { $value: '{color.brand}' },
+    },
+  }}
+/>
+
+## From a file
+
+<TokenGraph file="src/tokens.json" />

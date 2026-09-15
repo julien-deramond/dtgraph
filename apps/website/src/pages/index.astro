@@ -13,6 +13,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       </div>
       <div class="toolbar__status">
         <span id="file-chips" class="chips"></span>
+        <span id="context-controls" class="contexts" role="group" aria-label="Resolver contexts"
+        ></span>
         <span id="stats" class="stats"></span>
       </div>
       <div class="toolbar__group">
@@ -104,6 +106,36 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       background: #f9fafb;
       white-space: nowrap;
       text-overflow: ellipsis;
+    }
+    .chips > .chip--resolver {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .chips > .chip--ignored {
+      color: #9ca3af;
+      text-decoration: line-through;
+    }
+    .contexts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .contexts:empty {
+      display: none;
+    }
+    .contexts label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+    }
+    .contexts select {
+      padding: 0.1rem 0.3rem;
+      border: 1px solid var(--line);
+      border-radius: 0.35rem;
+      background: #fff;
+      font: inherit;
     }
     .stats {
       white-space: nowrap;
@@ -267,6 +299,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const error = $<HTMLElement>('error-output');
     const fileInput = $<HTMLInputElement>('file-input');
     const chips = $<HTMLElement>('file-chips');
+    const contextControls = $<HTMLElement>('context-controls');
     const stats = $<HTMLElement>('stats');
     const dropOverlay = $<HTMLElement>('drop-overlay');
     const pasteDialog = $<HTMLDialogElement>('paste-dialog');
@@ -289,13 +322,42 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const count = (n: number, noun: string): string =>
       `${format.format(n)} ${noun}${n === 1 ? '' : 's'}`;
     function reflect(): void {
+      const resolver = playground.resolver;
       // File names are untrusted: build chips with textContent only.
       chips.replaceChildren(
         ...playground.files.map((file) => {
           const chip = document.createElement('span');
           chip.textContent = file.source;
           chip.title = file.source;
+          if (resolver?.source === file.source) {
+            chip.classList.add('chip--resolver');
+            chip.title = `${file.source} (resolver)`;
+          } else if (resolver?.ignored.includes(file.source)) {
+            chip.classList.add('chip--ignored');
+            chip.title = `${file.source} (not referenced by the resolver for these contexts)`;
+          }
           return chip;
+        }),
+      );
+      // One selector per resolver modifier; modifier and context names are untrusted too.
+      contextControls.replaceChildren(
+        ...(resolver?.modifiers ?? []).map((modifier) => {
+          const label = document.createElement('label');
+          label.append(`${modifier.name}:`);
+          const select = document.createElement('select');
+          for (const context of modifier.contexts) {
+            const option = document.createElement('option');
+            option.value = context;
+            option.textContent = context;
+            option.selected = context === modifier.selected;
+            select.append(option);
+          }
+          select.addEventListener('change', () => {
+            playground.setContext(modifier.name, select.value);
+            reflect();
+          });
+          label.append(select);
+          return label;
         }),
       );
       const graph = playground.graph;

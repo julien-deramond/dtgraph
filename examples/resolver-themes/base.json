@@ -1,0 +1,12 @@
+{
+  "color": {
+    "$type": "color",
+    "blue-500": { "$value": "#3b82f6" },
+    "gray-100": { "$value": "#f3f4f6" },
+    "gray-900": { "$value": "#111827" }
+  },
+  "semantic": {
+    "$type": "color",
+    "accent": { "$value": "{color.blue-500}" }
+  }
+}

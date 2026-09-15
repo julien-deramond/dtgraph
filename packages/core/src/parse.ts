@@ -1,13 +1,15 @@
 import { DtcgParseError } from './errors.js';
 import type { GroupNode, TokenNode, TokenTreeNode } from './types.js';
 
+const SPEC_BASE = 'https://www.designtokens.org/tr/2025.10/format/';
+
 const SPEC = {
-  root: 'https://tr.designtokens.org/format/#file-format',
-  group: 'https://tr.designtokens.org/format/#groups-0',
-  token: 'https://tr.designtokens.org/format/#design-token-0',
-  type: 'https://tr.designtokens.org/format/#type-0',
-  description: 'https://tr.designtokens.org/format/#description-0',
-  extensions: 'https://tr.designtokens.org/format/#extensions',
+  root: `${SPEC_BASE}#file-format`,
+  group: `${SPEC_BASE}#groups`,
+  token: `${SPEC_BASE}#design-token-0`,
+  type: `${SPEC_BASE}#type-0`,
+  description: `${SPEC_BASE}#description`,
+  extensions: `${SPEC_BASE}#extensions`,
 } as const;
 
 const RESERVED_TOKEN_KEYS = new Set(['$value', '$type', '$description', '$extensions']);

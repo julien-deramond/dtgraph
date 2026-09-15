@@ -1,4 +1,4 @@
-const DTCG_SPEC_URL = 'https://tr.designtokens.org/format/';
+const DTCG_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/';
 
 /** Thrown when a document does not conform to the DTCG format. */
 export class DtcgParseError extends Error {

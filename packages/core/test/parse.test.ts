@@ -101,7 +101,7 @@ describe('parseTokenTree', () => {
       expect.unreachable();
     } catch (error) {
       expect(error).toBeInstanceOf(DtcgParseError);
-      expect((error as DtcgParseError).specReference).toContain('tr.designtokens.org');
+      expect((error as DtcgParseError).specReference).toContain('designtokens.org');
     }
   });
 });

@@ -5,8 +5,86 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 <SiteLayout title="Playground">
   <h1>dtgraph playground</h1>
   <p>
-    Drop a <a href="https://www.designtokens.org/tr/2025.10/format/">DTCG</a> token file here to
-    see its resolved token graph — entirely in your browser, nothing is uploaded.
+    Drop one or more <a href="https://www.designtokens.org/tr/2025.10/format/">DTCG</a> token
+    files below (or paste JSON) to see the resolved token graph. Everything runs in your
+    browser — files are never uploaded anywhere.
   </p>
-  <p><em>Coming soon.</em> In the meantime, see the <a href="/docs/">docs</a>.</p>
+
+  <div id="drop-zone" class="drop-zone" tabindex="0">
+    <p>Drop DTCG JSON file(s) here, or</p>
+    <input id="file-input" type="file" accept="application/json,.json" multiple />
+  </div>
+
+  <details>
+    <summary>Or paste JSON</summary>
+    <textarea
+      id="paste-input"
+      rows="10"
+      placeholder={'{\n  "color": {\n    "brand": { "$type": "color", "$value": "#3311ff" }\n  }\n}'}
+    ></textarea>
+    <button id="paste-render" type="button">Render pasted JSON</button>
+  </details>
+
+  <p id="error-output" class="error" role="alert"></p>
+  <div id="graph-output"></div>
+
+  <style>
+    .drop-zone {
+      border: 2px dashed #9ca3af;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+    .drop-zone.drag-over {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+    textarea {
+      width: 100%;
+      max-width: 40rem;
+      font-family: monospace;
+      display: block;
+      margin: 0.75rem 0;
+    }
+    .error {
+      color: #b91c1c;
+      white-space: pre-wrap;
+    }
+  </style>
+
+  <script>
+    import { readFiles, renderFilesToDom } from '../lib/playground.js';
+
+    const dropZone = document.getElementById('drop-zone') as HTMLElement;
+    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    const pasteInput = document.getElementById('paste-input') as HTMLTextAreaElement;
+    const pasteButton = document.getElementById('paste-render') as HTMLButtonElement;
+    const output = document.getElementById('graph-output') as HTMLElement;
+    const error = document.getElementById('error-output') as HTMLElement;
+
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files === null || fileInput.files.length === 0) return;
+      renderFilesToDom(await readFiles(fileInput.files), { output, error });
+    });
+
+    dropZone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', async (event) => {
+      event.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const files = event.dataTransfer?.files;
+      if (files === undefined || files.length === 0) return;
+      renderFilesToDom(await readFiles(files), { output, error });
+    });
+
+    pasteButton.addEventListener('click', () => {
+      renderFilesToDom([{ source: 'pasted.json', content: pasteInput.value }], { output, error });
+    });
+  </script>
 </SiteLayout>

@@ -28,3 +28,4 @@
 - [ ] Linked to an issue (or explained why not)
 - [ ] Tests added/updated where applicable
 - [ ] Docs updated where applicable
+- [ ] Labeled to match "Type of change" above (plus `ai-submitted` if agent-authored)

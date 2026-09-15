@@ -18,18 +18,26 @@ changes, and get code reviewed — for both human and AI-agent contributors.
    a PR description should let a reviewer understand *what* changed and *why* without
    reading the whole diff first.
 4. Link the PR to the issue it resolves (`Closes #N`).
+5. Label the PR to match the "Type of change" you checked in the template
+   (`bug`, `feature`, `enhancement`, or `documentation`), plus `ai-submitted` if it
+   was opened by an agent. Labels aren't optional decoration — filtering PRs by label
+   is how reviewers and future contributors find related work.
 
 ## Labels
 
-| Label | Meaning | Who applies it |
-| --- | --- | --- |
-| `bug` | Something isn't working | anyone, on the issue |
-| `feature` | New capability that does not exist yet | anyone, on the issue |
-| `enhancement` | Improvement to something that already exists | anyone, on the issue |
-| `upstream-drift` | dtgraph's behavior has drifted from the DTCG spec or a reference tool it tracks (e.g. `@udt/dtcg-parser`, `tokenc`) | anyone, on the issue |
-| `ai-submitted` | Opened by an AI agent rather than a human | the agent, at creation time |
-| `needs-triage` | No maintainer has read this yet — nobody should start work on it | applied automatically by every issue template |
-| `ready-to-dev` | Triaged and specified well enough to be picked up | a maintainer, after triage |
+Labels apply to **both issues and pull requests** — a PR without a type label is
+incomplete, the same as one without a description.
+
+| Label | Meaning | Applies to | Who applies it |
+| --- | --- | --- | --- |
+| `bug` | Something isn't working | issues, PRs | anyone, at creation time |
+| `feature` | New capability that does not exist yet | issues, PRs | anyone, at creation time |
+| `enhancement` | Improvement to something that already exists | issues, PRs | anyone, at creation time |
+| `documentation` | Docs-only or repo-governance change | PRs | anyone, at creation time |
+| `upstream-drift` | dtgraph's behavior has drifted from the DTCG spec or a reference tool it tracks (e.g. `@udt/dtcg-parser`, `tokenc`) | issues, PRs | anyone, at creation time |
+| `ai-submitted` | Opened by an AI agent rather than a human | issues, PRs | the agent, at creation time |
+| `needs-triage` | No maintainer has read this yet — nobody should start work on it | issues only | applied automatically by every issue template |
+| `ready-to-dev` | Triaged and specified well enough to be picked up | issues only | a maintainer, after triage |
 
 Label colors follow the same system as
 [julien-deramond/bootstrap-tokens](https://github.com/julien-deramond/bootstrap-tokens/labels)
@@ -75,3 +83,6 @@ down explicitly rather than assumed:
 - **Implementing.** Follow the same development workflow as anyone else: a branch per
   issue, a PR that follows the PR template, and a description detailed and
   human-readable enough for a maintainer to review without extra context-gathering.
+  Label the PR with its type (`bug`/`feature`/`enhancement`/`documentation`) plus
+  `ai-submitted` — the same rule as issues, applied at PR creation, not left for a
+  maintainer to add later.

@@ -2,6 +2,7 @@
   "name": "dtgraph-monorepo",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "description": "Monorepo for dtgraph",
   "license": "MIT",
   "author": "Julien Déramond",
@@ -12,5 +13,18 @@
   "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531",
   "engines": {
     "node": ">=20"
+  },
+  "scripts": {
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "typescript-eslint": "8.70.0"
   }
 }

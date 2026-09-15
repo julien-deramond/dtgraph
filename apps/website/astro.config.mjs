@@ -1,6 +1,8 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 
+import { CSP_HEADER_VALUE } from './src/lib/csp.js';
+
 export default defineConfig({
   site: 'https://dtgraph.dev',
   integrations: [
@@ -16,6 +18,14 @@ export default defineConfig({
         {
           label: 'Docs',
           items: [{ autogenerate: { directory: 'docs' } }],
+        },
+      ],
+      // Starlight renders its own layout, not SiteLayout.astro, so the same baseline CSP
+      // (see src/lib/csp.ts) is injected here to cover the /docs/* pages too.
+      head: [
+        {
+          tag: 'meta',
+          attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP_HEADER_VALUE },
         },
       ],
     }),

@@ -4,3 +4,13 @@ packages:
   - 'packages/*'
   - 'apps/*'
   - 'examples/*'
+allowBuilds:
+  esbuild: true
+overrides:
+  '@astrojs/compiler-rs': 0.4.0
+minimumReleaseAgeExclude:
+  - '@csstools/css-syntax-patches-for-csstree@1.1.14'
+  - brace-expansion@5.0.12
+  - electron-to-chromium@1.5.428
+  - fast-uri@3.1.8
+  - magic-string@1.4.1

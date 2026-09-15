@@ -70,4 +70,62 @@ describe('resolveAliasEdges', () => {
     const tree = parseTokenTree(loadFixture('valid', 'basic-colors.json'));
     expect(resolveAliasEdges(tree)).toEqual([]);
   });
+
+  it('resolves a member-level alias inside an object composite value', () => {
+    const tree = parseTokenTree(loadFixture('valid', 'composite-typography.json'));
+    const edges = resolveAliasEdges(tree);
+
+    expect(edges).toEqual([
+      {
+        from: ['type', 'heading'],
+        to: ['font', 'family'],
+        reference: '{font.family}',
+        kind: 'composite-member',
+        member: 'fontFamily',
+      },
+    ]);
+  });
+
+  it('resolves member-level aliases inside an array composite value, including nested object elements', () => {
+    const tree = parseTokenTree(loadFixture('valid', 'composite-shadow-layered.json'));
+    const edges = resolveAliasEdges(tree);
+
+    expect(edges).toContainEqual({
+      from: ['shadow', 'base'],
+      to: ['color', 'shadow-tint'],
+      reference: '{color.shadow-tint}',
+      kind: 'composite-member',
+      member: 'color',
+    });
+    expect(edges).toContainEqual({
+      from: ['shadow', 'layered'],
+      to: ['shadow', 'base'],
+      reference: '{shadow.base}',
+      kind: 'composite-member',
+      member: '[0]',
+    });
+    expect(edges).toContainEqual({
+      from: ['shadow', 'layered'],
+      to: ['color', 'shadow-tint'],
+      reference: '{color.shadow-tint}',
+      kind: 'composite-member',
+      member: '[1].color',
+    });
+  });
+
+  it('rejects a composite-member alias that does not resolve to a known token', () => {
+    const tree = parseTokenTree(loadFixture('invalid', 'dangling-composite-alias.json'));
+
+    expect(() => resolveAliasEdges(tree)).toThrow(DtcgParseError);
+    expect(() => resolveAliasEdges(tree)).toThrow(
+      /Alias "\{color\.nonexistent\}" does not resolve to any known token/,
+    );
+
+    try {
+      resolveAliasEdges(tree);
+      expect.unreachable();
+    } catch (error) {
+      expect((error as DtcgParseError).path).toEqual(['border', 'focusring']);
+    }
+  });
 });

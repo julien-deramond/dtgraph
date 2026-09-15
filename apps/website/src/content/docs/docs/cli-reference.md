@@ -125,8 +125,9 @@ name — and it will:
 1. follow `resolutionOrder`, expanding each set to its sources and each modifier to the sources
    of its selected context;
 2. pick each modifier's context from `--context <modifier>=<context>` (repeat the flag, or
-   comma-separate pairs), falling back to the modifier's `default`; a modifier with neither is
-   an error that lists the available contexts;
+   comma-separate pairs), falling back to the modifier's `default`. `default` is optional in the
+   spec, and a modifier with neither is an error — every such modifier is named at once, and the
+   CLI prints the `--context` flags that would make the run succeed underneath;
 3. merge tokens so that a later source **overrides** an earlier one at the same path (the
    spec's rule) instead of reporting the cross-file collision plain multi-file input would;
 4. only then resolve aliases and check for cycles, so `{semantic.bg}` in a shared components

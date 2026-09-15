@@ -2,6 +2,7 @@ import { DtcgParseError } from '@dtgraph/core';
 import type { Command } from 'commander';
 
 import {
+  describeContextHint,
   loadAndResolveTokenFiles,
   parseContextOptions,
   readTokenFiles,
@@ -23,6 +24,8 @@ export interface ValidateResult {
     message: string;
     path?: string[];
     specReference?: string;
+    /** What to change to make this run succeed, when the failure has an obvious remedy. */
+    hint?: string;
   };
 }
 
@@ -45,10 +48,16 @@ export function validateTokenFiles(
     };
   } catch (error) {
     if (error instanceof DtcgParseError) {
+      const hint = describeContextHint(error);
       return {
         ok: false,
         files: sources,
-        error: { message: error.message, path: error.path, specReference: error.specReference },
+        error: {
+          message: error.message,
+          path: error.path,
+          specReference: error.specReference,
+          ...(hint === undefined ? {} : { hint }),
+        },
       };
     }
     return {
@@ -115,6 +124,7 @@ export function registerValidateCommand(program: Command): void {
         console.log(formatValidateSummary(result));
       } else {
         console.error(`✗ ${result.error?.message}`);
+        if (result.error?.hint !== undefined) console.error(result.error.hint);
       }
 
       if (!result.ok) {

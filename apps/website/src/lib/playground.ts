@@ -1,5 +1,10 @@
-import { buildTokenGraphFromDocuments, renderTokenGraphToSvg } from '@dtgraph/core';
-import type { ResolverInput, ResolverModifier, TokenGraph, TokenGraphBuild } from '@dtgraph/core';
+import {
+  MissingResolverContextsError,
+  buildTokenGraphFromDocuments,
+  listResolverModifiers,
+  renderTokenGraphToSvg,
+} from '@dtgraph/core';
+import type { ResolverInput, TokenGraph, TokenGraphBuild } from '@dtgraph/core';
 
 import { checkGraphComplexity, checkUploadComplexity } from './upload-guard.js';
 
@@ -67,16 +72,22 @@ export interface PlaygroundElements {
 export interface PlaygroundModifier {
   name: string;
   contexts: string[];
-  /** The context currently applied (from the user's choice or the modifier's default). */
-  selected: string;
+  /**
+   * The context currently applied (from the user's choice or the modifier's default), or
+   * `undefined` while this modifier still needs a choice before anything can resolve.
+   */
+  selected: string | undefined;
 }
 
-/** What the page needs to know about the resolver behind the current graph, if any. */
+/**
+ * What the page needs to know about the resolver behind the current graph — or, when a modifier
+ * is still waiting for a context, about the resolver that could not be resolved yet.
+ */
 export interface PlaygroundResolver {
-  /** File name of the resolver document. */
-  source: string;
+  /** File name of the resolver document, when it is known. */
+  source: string | undefined;
   modifiers: PlaygroundModifier[];
-  /** Files (by name) that the resolver referenced for the current contexts. */
+  /** Files (by name) that the resolver referenced for the current contexts; empty until it resolves. */
   sources: string[];
   /** Loaded files that neither are the resolver nor were referenced by it — silently unused. */
   ignored: string[];
@@ -91,7 +102,9 @@ export interface PlaygroundController {
   readonly resolver: PlaygroundResolver | undefined;
   /**
    * Parse, resolve, and show `files`, with every resolver modifier at its default context. On
-   * failure the error is shown as plain text and whatever was on screen before stays there.
+   * failure the error is shown as plain text and whatever was on screen before stays there —
+   * except when a resolver modifier has no default, where the modifiers are exposed through
+   * {@link resolver} instead so the page can ask for a context and retry via {@link setContext}.
    * Returns whether the load succeeded.
    */
   load(files: PlaygroundFileInput[]): boolean;
@@ -110,25 +123,40 @@ function describeResolver(
 ): PlaygroundResolver {
   // Sources may carry a `#/json/pointer` suffix; compare on the file part only.
   const used = new Set(resolver.sources.map((source) => source.replace(/#.*$/, '')));
-  // Modifiers can be declared under `modifiers` or inline in `resolutionOrder`; both get a selector.
-  const definitions = new Map<string, ResolverModifier>();
-  for (const modifier of Object.values(resolver.document.modifiers)) {
-    definitions.set(modifier.name, modifier);
-  }
-  for (const entry of resolver.document.resolutionOrder) {
-    if (entry.kind === 'modifier') definitions.set(entry.modifier.name, entry.modifier);
-  }
   return {
     source: resolver.source,
-    modifiers: [...definitions.values()].map((modifier) => ({
+    // Modifiers can be declared under `modifiers` or inline in `resolutionOrder`; both get a selector.
+    modifiers: listResolverModifiers(resolver.document).map((modifier) => ({
       name: modifier.name,
-      contexts: Object.keys(modifier.contexts),
+      contexts: modifier.contexts,
       selected: resolver.contexts[modifier.name],
     })),
     sources: [...used],
     ignored: files
       .map((file) => file.source)
       .filter((source) => source !== resolver.source && !used.has(source)),
+  };
+}
+
+/**
+ * The same description for a resolver that has not resolved yet because a modifier declares no
+ * default: every modifier gets a selector, with the ones still waiting left unselected. Which
+ * files the resolver would pull in is unknowable until it resolves, so no chip is marked used or
+ * ignored.
+ */
+function describePendingResolver(
+  error: MissingResolverContextsError,
+  context: ResolverInput,
+): PlaygroundResolver {
+  return {
+    source: error.resolverSource,
+    modifiers: error.modifiers.map((modifier) => ({
+      name: modifier.name,
+      contexts: modifier.contexts,
+      selected: context[modifier.name] ?? modifier.default,
+    })),
+    sources: [],
+    ignored: [],
   };
 }
 
@@ -162,6 +190,16 @@ export function createPlayground(els: PlaygroundElements, mount: MountGraph): Pl
       built = buildTokenGraphFromFiles(next, { context: nextContext });
     } catch (error) {
       showError(error instanceof Error ? error.message : String(error));
+      // A resolver that only lacks a context is not a dead end: keep the files it came with so
+      // the page can offer the choices from the error and `setContext` can retry. Nothing
+      // resolved, so there is no graph to show alongside them.
+      if (error instanceof MissingResolverContextsError) {
+        graph = undefined;
+        files = [...next];
+        context = nextContext;
+        resolver = describePendingResolver(error, nextContext);
+        mountCurrent();
+      }
       return false;
     }
     showError('');

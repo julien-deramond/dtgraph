@@ -137,6 +137,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       background: #fff;
       font: inherit;
     }
+    .contexts select.select--unset {
+      border-color: var(--accent);
+    }
     .stats {
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
@@ -345,6 +348,16 @@ import SiteLayout from '../layouts/SiteLayout.astro';
           const label = document.createElement('label');
           label.append(`${modifier.name}:`);
           const select = document.createElement('select');
+          // No default and nothing picked yet: the graph is waiting on this choice, so show it
+          // unset rather than silently applying a context the resolver never asked for.
+          if (modifier.selected === undefined) {
+            const placeholder = document.createElement('option');
+            placeholder.textContent = 'choose…';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.append(placeholder);
+            select.classList.add('select--unset');
+          }
           for (const context of modifier.contexts) {
             const option = document.createElement('option');
             option.value = context;

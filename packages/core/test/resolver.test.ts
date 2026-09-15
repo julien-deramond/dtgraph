@@ -3,11 +3,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { DtcgParseError } from '../src/errors.js';
+import { DtcgParseError, MissingResolverContextsError } from '../src/errors.js';
 import {
   buildTokenGraphFromDocuments,
   buildTokenGraphFromResolver,
   isResolverDocument,
+  listResolverModifiers,
   parseResolverDocument,
 } from '../src/resolver.js';
 import type { ResolverFileInput, TokenDocumentInput } from '../src/resolver.js';
@@ -213,6 +214,29 @@ describe('parseResolverDocument', () => {
   });
 });
 
+describe('listResolverModifiers', () => {
+  it('lists declared and inline modifiers with their contexts and defaults', () => {
+    const resolver = parseResolverDocument(
+      resolverWith({
+        resolutionOrder: [
+          { $ref: '#/sets/base' },
+          { $ref: '#/modifiers/theme' },
+          {
+            type: 'modifier',
+            name: 'density',
+            contexts: { compact: [], cozy: [] },
+          },
+        ],
+      }),
+    );
+
+    expect(listResolverModifiers(resolver)).toEqual([
+      { name: 'theme', contexts: ['light', 'dark'], default: 'light' },
+      { name: 'density', contexts: ['compact', 'cozy'] },
+    ]);
+  });
+});
+
 describe('buildTokenGraphFromResolver', () => {
   const resolver = parseResolverDocument(RESOLVER);
 
@@ -345,6 +369,61 @@ describe('buildTokenGraphFromResolver', () => {
         input: { theme: 'dark' },
       }).contexts,
     ).toEqual({ theme: 'dark' });
+  });
+
+  it('names every modifier left without a context in one error, and carries them on it', () => {
+    const noDefaults = parseResolverDocument(
+      resolverWith({
+        modifiers: {
+          theme: {
+            contexts: (RESOLVER as { modifiers: { theme: { contexts: unknown } } }).modifiers.theme
+              .contexts,
+          },
+          density: {
+            contexts: {
+              compact: [
+                { space: { $type: 'dimension', gap: { $value: { value: 4, unit: 'px' } } } },
+              ],
+              cozy: [{ space: { $type: 'dimension', gap: { $value: { value: 8, unit: 'px' } } } }],
+            },
+          },
+        },
+      }),
+    );
+
+    expectParseError(
+      () =>
+        buildTokenGraphFromResolver({
+          resolver: noDefaults,
+          resolverSource: 'ds.resolver.json',
+          files: tokenFiles(),
+        }),
+      /Modifiers "theme", "density" have no default context and none was given — choose a context for each: theme \(light, dark\), density \(compact, cozy\)/,
+      '#inputs',
+    );
+
+    try {
+      buildTokenGraphFromResolver({
+        resolver: noDefaults,
+        resolverSource: 'ds.resolver.json',
+        files: tokenFiles(),
+        // Half an answer still leaves "density" to ask about.
+        input: { theme: 'dark' },
+      });
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(MissingResolverContextsError);
+      const missing = error as MissingResolverContextsError;
+      expect(missing.message).toMatch(/Modifier "density" has no default context/);
+      expect(missing.missing).toEqual(['density']);
+      expect(missing.path).toEqual(['modifiers', 'density']);
+      expect(missing.resolverSource).toBe('ds.resolver.json');
+      // Every modifier rides along, not just the unanswered one, so a caller can offer them all.
+      expect(missing.modifiers).toEqual([
+        { name: 'theme', contexts: ['light', 'dark'] },
+        { name: 'density', contexts: ['compact', 'cozy'] },
+      ]);
+    }
   });
 
   it('accepts inline token sources, set-to-set references, and $ref overrides', () => {

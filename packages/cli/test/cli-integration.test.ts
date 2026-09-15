@@ -61,3 +61,48 @@ describe('dtgraph render (end-to-end)', () => {
     ).rejects.toThrow(/does not resolve to any known token/);
   });
 });
+
+describe('dtgraph validate (end-to-end)', () => {
+  it('prints a human-readable summary and exits 0 for valid file(s)', async () => {
+    const inputFile = join(dir, 'tokens.json');
+    await writeFile(
+      inputFile,
+      JSON.stringify({ color: { brand: { $type: 'color', $value: '#112233' } } }),
+    );
+
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+    try {
+      await createProgram().parseAsync(['node', 'dtgraph', 'validate', inputFile]);
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('1 file(s) valid'));
+      expect(process.exitCode).toBeUndefined();
+    } finally {
+      logSpy.mockRestore();
+      process.exitCode = originalExitCode;
+    }
+  });
+
+  it('prints a JSON result and sets a non-zero exit code for an invalid file', async () => {
+    const inputFile = join(dir, 'tokens.json');
+    await writeFile(
+      inputFile,
+      JSON.stringify({ color: { accent: { $value: '{color.nonexistent}' } } }),
+    );
+
+    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+    try {
+      await createProgram().parseAsync(['node', 'dtgraph', 'validate', '--json', inputFile]);
+      const written = writeSpy.mock.calls.map(([chunk]) => String(chunk)).join('');
+      const result = JSON.parse(written) as { ok: boolean; error?: { message: string } };
+      expect(result.ok).toBe(false);
+      expect(result.error?.message).toMatch(/does not resolve to any known token/);
+      expect(process.exitCode).toBe(1);
+    } finally {
+      writeSpy.mockRestore();
+      process.exitCode = originalExitCode;
+    }
+  });
+});

@@ -7,3 +7,7 @@ pnpm-lock.yaml
 # alone for now rather than reformatting unrelated content in this PR.
 *.md
 .github/ISSUE_TEMPLATE/
+
+# No prettier-plugin-astro configured yet — ESLint already skips .astro files
+# (see eslint.config.js) for the same reason.
+*.astro

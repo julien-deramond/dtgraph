@@ -14,6 +14,8 @@ const SPEC = {
 
 const RESERVED_TOKEN_KEYS = new Set(['$value', '$type', '$description', '$extensions']);
 const RESERVED_GROUP_KEYS = new Set(['$type', '$description', '$extensions']);
+/** Allowed on the root group only: a JSON Schema hint for editors, carrying no token meaning. */
+const ROOT_ONLY_KEYS = new Set(['$schema']);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -108,6 +110,16 @@ function parseGroupNode(
   const children: Record<string, TokenTreeNode> = {};
   for (const [key, value] of Object.entries(node)) {
     if (key.startsWith('$')) {
+      if (ROOT_ONLY_KEYS.has(key)) {
+        if (path.length > 0) {
+          throw new DtcgParseError(
+            `Property "${key}" is only allowed at the document root, not on a nested group`,
+            path,
+            SPEC.group,
+          );
+        }
+        continue;
+      }
       if (!RESERVED_GROUP_KEYS.has(key)) {
         throw new DtcgParseError(`Unknown reserved property "${key}" on a group`, path, SPEC.group);
       }

@@ -37,6 +37,23 @@ export function parseTokenTree(document: unknown): TokenTreeNode {
   return parseNode(document, [], undefined);
 }
 
+/** Flatten a parsed token tree into every `TokenNode` it contains, in document order. */
+export function flattenTokenTree(tree: TokenTreeNode): TokenNode[] {
+  const nodes: TokenNode[] = [];
+  collectTokenNodes(tree, nodes);
+  return nodes;
+}
+
+function collectTokenNodes(node: TokenTreeNode, nodes: TokenNode[]): void {
+  if (node.kind === 'token') {
+    nodes.push(node);
+    return;
+  }
+  for (const child of Object.values(node.children)) {
+    collectTokenNodes(child, nodes);
+  }
+}
+
 function parseNode(
   node: Record<string, unknown>,
   path: string[],

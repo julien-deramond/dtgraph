@@ -1,4 +1,5 @@
 import { DtcgParseError } from './errors.js';
+import { flattenTokenTree } from './parse.js';
 import type { TokenEdge, TokenNode, TokenTreeNode } from './types.js';
 
 const ALIAS_SPEC_URL = 'https://www.designtokens.org/tr/2025.10/format/#aliases-references';
@@ -15,12 +16,8 @@ function parseAliasReference(value: unknown): string[] | undefined {
 }
 
 function collectTokens(node: TokenTreeNode, tokensByPath: Map<string, TokenNode>): void {
-  if (node.kind === 'token') {
-    tokensByPath.set(node.path.join('.'), node);
-    return;
-  }
-  for (const child of Object.values(node.children)) {
-    collectTokens(child, tokensByPath);
+  for (const token of flattenTokenTree(node)) {
+    tokensByPath.set(token.path.join('.'), token);
   }
 }
 

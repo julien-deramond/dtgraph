@@ -1,5 +1,8 @@
 export { DtcgParseError } from './errors.js';
-export { parseTokenTree } from './parse.js';
+export { buildTokenGraph } from './graph.js';
+export { flattenTokenTree, parseTokenTree } from './parse.js';
+export { renderTokenGraphToSvg } from './render.js';
+export type { RenderTokenGraphOptions } from './render.js';
 export { resolveAliasEdges, resolveAliasEdgesAcrossFiles } from './resolve.js';
 export type { NamedTokenTree } from './resolve.js';
 export type {

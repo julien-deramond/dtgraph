@@ -17,6 +17,7 @@ import {
   motionDuration,
   stagePaddingFor,
 } from './environment.js';
+import { renderViewerGraphToSvg, type ExportSvgOptions } from './export-svg.js';
 import { collectFocus } from './focus.js';
 import { layoutViewerGraph, viewerExtent, type LayoutOptions } from './layout.js';
 import { createInteractionState, createSigmaSettings } from './render.js';
@@ -57,6 +58,12 @@ export interface TokenGraphViewer {
   clearSelection(): void;
   /** The selected token's dotted path, if any. */
   readonly selected: string | undefined;
+  /**
+   * The map as a standalone SVG string: same positions, colors and sizes as the canvas, framed
+   * like `fit()`, in the viewer's theme unless `options` says otherwise. See
+   * {@link renderViewerGraphToSvg} for what it does and does not carry over.
+   */
+  toSvg(options?: ExportSvgOptions): string;
   /** Tear down the renderer and remove everything the viewer added to the container. */
   destroy(): void;
 }
@@ -363,6 +370,7 @@ export function mountTokenGraphViewer(
     get selected() {
       return state.selected ?? undefined;
     },
+    toSvg: (svgOptions) => renderViewerGraphToSvg(graph, { theme: themeName, ...svgOptions }),
     destroy: () => {
       document.removeEventListener('keydown', onKeydown);
       observer?.disconnect();

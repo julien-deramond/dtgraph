@@ -394,7 +394,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
     const playground = createPlayground({ output, error }, (container, graph) => {
       tokenOpen = false;
-      viewer = mountTokenGraphViewer(container, graph, {
+      const mounted = mountTokenGraphViewer(container, graph, {
         theme,
         colorBy,
         onSelect: (token) => {
@@ -402,7 +402,15 @@ import SiteLayout from '../layouts/SiteLayout.astro';
           syncHint();
         },
       });
-      return viewer;
+      viewer = mounted;
+      // Let go of the instance when the playground swaps it out, so the toolbar never drives
+      // (or exports) a torn-down map after a load that left nothing on screen.
+      return {
+        destroy() {
+          mounted.destroy();
+          if (viewer === mounted) viewer = undefined;
+        },
+      };
     });
 
     /*
@@ -626,7 +634,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     fitButton.addEventListener('click', () => viewer?.fit());
 
     exportButton.addEventListener('click', () => {
-      const svg = playground.exportSvg();
+      // What you see: the mounted viewer serializes its own map (layout, palette, dot sizes).
+      // Without one — no WebGL, nothing loaded — fall back to core's static list rendering.
+      const svg = viewer?.toSvg() ?? playground.exportSvg();
       if (svg === undefined) return;
       const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
       const link = document.createElement('a');

@@ -75,6 +75,7 @@ injectViewerStyles(); // idempotent; adds one <style id="dtgraph-viewer-styles">
 | `selected`         | The selected token's dotted path, or `undefined`.                                    |
 | `zoomTo(path)`     | Animate the camera onto a token.                                                     |
 | `fit()`            | Animate the camera back to the whole graph.                                          |
+| `toSvg(options?)`  | The map as a standalone SVG string (see [Export](#export)).                           |
 | `destroy()`        | Tear down the renderer and remove everything the viewer added to the container.     |
 | `graph`, `sigma`   | The laid-out graphology graph and the Sigma instance — escape hatches for extension. |
 
@@ -89,6 +90,43 @@ injectViewerStyles(); // idempotent; adds one <style id="dtgraph-viewer-styles">
 - **Legend**: click a group or type to show only it; click again to clear.
 - **Keyboard**: `/` or `Ctrl`/`Cmd`+`K` focuses search (arrows + `Enter` pick a result), `Esc`
   clears, `f` fits.
+
+## Export
+
+`viewer.toSvg()` serializes the map to a standalone SVG string: the same layout positions, the
+same palette colors, the same blast-radius dot sizes and the same faded edge texture, framed the
+way `fit()` frames it, in the viewer's theme.
+
+```ts
+const svg = viewer.toSvg({ width: 1600, theme: 'light' });
+```
+
+| Option       | Type                         | Default  | Description                                                  |
+| ------------ | ---------------------------- | -------- | ------------------------------------------------------------ |
+| `width`      | `number`                     | `1200`   | Image width in pixels; the height follows the graph's shape. |
+| `theme`      | `'dark' \| 'light'` or colors | mounted  | Overrides the viewer's own theme.                            |
+| `padding`    | `number`                     | `48`     | Breathing room around the graph, in pixels.                  |
+| `labels`     | `'auto' \| 'all' \| 'none'`  | `'auto'` | `auto` thins labels through the same grid the canvas uses.   |
+| `background` | `boolean`                    | `true`   | Paint the theme's background behind the graph.               |
+
+It is the picture, not the session: the camera, the hover spotlight, the selection and the chrome
+are left out, so the file is the map at rest. Dot and label sizes are in pixels, as on the canvas,
+so a wider export shows a wider map rather than a magnified one.
+
+Without a mounted viewer, `renderViewerGraphToSvg(graph, options)` takes any graph you have built
+and laid out yourself:
+
+```ts
+import { buildViewerGraph, layoutViewerGraph, renderViewerGraphToSvg } from '@dtgraph/viewer';
+
+const graph = buildViewerGraph(tokenGraph);
+layoutViewerGraph(graph);
+const svg = renderViewerGraphToSvg(graph, { theme: 'dark' });
+```
+
+`renderTokenGraphToSvg` in [`@dtgraph/core`](../core#readme) is a different picture for a
+different job: a dependency-free list rendering, one row per token, with no layout step. That is
+what the CLI's `dtgraph render` and `<TokenGraph />` in static mode write.
 
 ## Where it is running
 
@@ -151,7 +189,9 @@ over).
 
 Token content is untrusted input. The viewer draws token text only through canvas `fillText`
 (labels) and builds every panel, result row and chip from DOM nodes with `textContent` — no HTML
-is ever built from token content, the same guarantee as `renderTokenGraphToSvg` in core.
+is ever built from token content, the same guarantee as `renderTokenGraphToSvg` in core. The SVG
+export escapes every piece of token-derived text before it reaches the markup, so it is safe to
+call on files you did not write.
 
 ## Examples
 

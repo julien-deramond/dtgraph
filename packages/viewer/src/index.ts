@@ -27,6 +27,16 @@ export {
 export type { Extent } from './layout.js';
 export type { LayoutOptions } from './layout.js';
 export { assignCategoryColors, DARK_PALETTE, fadeTowards, LIGHT_PALETTE } from './palette.js';
+export { renderViewerGraphToSvg } from './export-svg.js';
+export type { ExportSvgOptions } from './export-svg.js';
+export {
+  LABEL_FONT_STACK,
+  LABEL_GRID_CELL_SIZE,
+  LABEL_SIZE,
+  labelFontSize,
+  labelOffset,
+  selectGridLabels,
+} from './labels.js';
 export { collectDownstream, collectFocus, collectUpstream, edgeInFocus } from './focus.js';
 export type { FocusSets } from './focus.js';
 export { searchTokens } from './search.js';

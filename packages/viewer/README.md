@@ -101,17 +101,39 @@ way `fit()` frames it, in the viewer's theme.
 const svg = viewer.toSvg({ width: 1600, theme: 'light' });
 ```
 
-| Option       | Type                         | Default  | Description                                                  |
-| ------------ | ---------------------------- | -------- | ------------------------------------------------------------ |
-| `width`      | `number`                     | `1200`   | Image width in pixels; the height follows the graph's shape. |
+| Option       | Type                          | Default  | Description                                                  |
+| ------------ | ----------------------------- | -------- | ------------------------------------------------------------ |
+| `width`      | `number`                      | `1200`   | Image width in pixels; the height follows the graph's shape. |
 | `theme`      | `'dark' \| 'light'` or colors | mounted  | Overrides the viewer's own theme.                            |
-| `padding`    | `number`                     | `48`     | Breathing room around the graph, in pixels.                  |
+| `padding`    | `number`                      | `48`     | Breathing room around the graph, in pixels.                  |
 | `labels`     | `'auto' \| 'all' \| 'none'`  | `'auto'` | `auto` thins labels through the same grid the canvas uses.   |
-| `background` | `boolean`                    | `true`   | Paint the theme's background behind the graph.               |
+| `background` | `boolean`                     | `true`   | Paint the theme's background behind the graph.               |
+| `emphasis`   | `ExportEmphasis`              | current  | What the file spotlights (see below).                        |
 
-It is the picture, not the session: the camera, the hover spotlight, the selection and the chrome
-are left out, so the file is the map at rest. Dot and label sizes are in pixels, as on the canvas,
-so a wider export shows a wider map rather than a magnified one.
+### What the file spotlights
+
+`viewer.toSvg()` exports the map as it stands: select a token and the file has that token ringed,
+its upstream chain and its blast radius lit and labelled, everything else faded the way the canvas
+fades it; solo a legend group and the file shows that group alone. Pass `emphasis` to override it,
+or `{ emphasis: {} }` for the map at rest.
+
+```ts
+viewer.select('color.brand.primary');
+const focused = viewer.toSvg(); // the selection, its chains, the rest faded
+const atRest = viewer.toSvg({ emphasis: {} }); // every token at full strength
+```
+
+| Field        | Type                       | Description                                                          |
+| ------------ | -------------------------- | -------------------------------------------------------------------- |
+| `selected`   | `string \| null`           | The token in the spotlight; its chains are walked for you.           |
+| `hovered`    | `string \| null`           | Spotlight one token's direct neighbors only; outranks `selected`.    |
+| `solo`       | `string \| null`           | Show one category alone.                                             |
+| `categoryOf` | `(node: string) => string` | Which category a token is in. Defaults to its group.                 |
+
+The camera is still out of it: the file is the whole map, framed the way `fit()` frames it, never
+the region you had zoomed into. So is the chrome (search, legend, detail panel). Dot and label
+sizes are in pixels, as on the canvas, so a wider export shows a wider map rather than a magnified
+one.
 
 Without a mounted viewer, `renderViewerGraphToSvg(graph, options)` takes any graph you have built
 and laid out yourself:

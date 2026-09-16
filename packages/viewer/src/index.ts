@@ -28,7 +28,14 @@ export type { Extent } from './layout.js';
 export type { LayoutOptions } from './layout.js';
 export { assignCategoryColors, DARK_PALETTE, fadeTowards, LIGHT_PALETTE } from './palette.js';
 export { renderViewerGraphToSvg } from './export-svg.js';
-export type { ExportSvgOptions } from './export-svg.js';
+export type { ExportEmphasis, ExportSvgOptions } from './export-svg.js';
+export {
+  createInteractionState,
+  edgeEmphasis,
+  LIT_EDGE_THICKNESS,
+  nodeEmphasis,
+} from './emphasis.js';
+export type { Emphasis, InteractionState } from './emphasis.js';
 export {
   LABEL_FONT_STACK,
   LABEL_GRID_CELL_SIZE,

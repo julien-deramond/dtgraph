@@ -65,6 +65,19 @@ function cssColor(value: string): string {
   return CSS_COLOR.test(value) ? value : 'currentColor';
 }
 
+/**
+ * Coerce a count read off the graph into a number that is safe to place in the output. `order`
+ * and `size` are typed as numbers, but a type is not a runtime check: `graph` is a parameter, and
+ * a JavaScript consumer of this package can hand over anything, including something it built from
+ * its own untrusted input. These two reach the title text without an escape between them and the
+ * reader, so they are coerced rather than trusted, the way `renderTokenGraphToSvg` coerces its
+ * width in core.
+ */
+function count(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.trunc(value));
+}
+
 export interface ExportSvgOptions {
   /** Theme name, or a full color set. Defaults to `"dark"`, like the viewer. */
   theme?: ViewerTheme | ThemeColors;
@@ -326,9 +339,11 @@ export function renderViewerGraphToSvg(graph: ViewerGraph, options: ExportSvgOpt
     state?.selected === null || state?.selected === undefined
       ? ''
       : `, focused on ${escapeXml(state.selected)}`;
+  const tokens = count(graph.order);
+  const references = count(graph.size);
   const title =
-    `<title>Token graph: ${graph.order} token${graph.order === 1 ? '' : 's'}, ` +
-    `${graph.size} reference${graph.size === 1 ? '' : 's'}${focused}</title>`;
+    `<title>Token graph: ${tokens} token${tokens === 1 ? '' : 's'}, ` +
+    `${references} reference${references === 1 ? '' : 's'}${focused}</title>`;
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" ` +

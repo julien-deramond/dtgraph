@@ -1,5 +1,12 @@
 # @dtgraph/mdx
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`5e551ed`](https://github.com/julien-deramond/dtgraph/commit/5e551ed7346bbc0fc7bc164840e0d52736cf20f2)]:
+  - @dtgraph/viewer@0.3.0
+
 ## 0.1.1
 
 ### Patch Changes

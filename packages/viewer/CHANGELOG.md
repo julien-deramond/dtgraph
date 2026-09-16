@@ -1,5 +1,16 @@
 # @dtgraph/viewer
 
+## 0.3.0
+
+### Minor Changes
+
+- [#118](https://github.com/julien-deramond/dtgraph/pull/118) [`5e551ed`](https://github.com/julien-deramond/dtgraph/commit/5e551ed7346bbc0fc7bc164840e0d52736cf20f2) Thanks [@julien-deramond](https://github.com/julien-deramond)! - Add `viewer.toSvg()` (and the standalone `renderViewerGraphToSvg`), which serializes the map the
+  viewer is showing to an SVG string: the layout positions, palette colors, blast-radius dot sizes
+  and faded edge texture from the canvas, framed the way `fit()` frames it, in the viewer's theme.
+  Until now the only SVG a host could hand a visitor was core's list rendering, which knows nothing
+  about the map on screen. The camera, hover spotlight, selection and chrome stay out of the file, so
+  it is the map at rest; token text is escaped on the way in, like everywhere else in the viewer.
+
 ## 0.2.0
 
 ### Minor Changes

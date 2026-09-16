@@ -39,6 +39,9 @@
   --link: light-dark(#1d4ed8, #93c5fd);
   --link-hover: light-dark(#1e40af, #bfdbfe);
 
+  /* The GitHub star in the header: amber, and light enough to read on the dark theme */
+  --star: light-dark(#d97706, #fbbf24);
+
   /* Feedback */
   --danger-fg: light-dark(#b91c1c, #fca5a5);
   --danger-bg: light-dark(#fef2f2, #3f1d1d);

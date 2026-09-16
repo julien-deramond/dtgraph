@@ -44,7 +44,11 @@ export function buildTokenGraphFromFiles(
   return build;
 }
 
-/** Parse, resolve, and render token file contents to the static SVG (the "Export SVG" action). */
+/**
+ * Parse, resolve, and render token file contents to core's static SVG. The page exports what the
+ * viewer is showing instead (`viewer.toSvg()`); this is the fallback for when no viewer is
+ * mounted, and the shape the CLI and MDX static mode write.
+ */
 export function renderTokenFilesToSvg(
   files: PlaygroundFileInput[],
   options: PlaygroundBuildOptions = {},
@@ -117,7 +121,10 @@ export interface PlaygroundController {
   setContext(modifier: string, context: string): boolean;
   /** Mount the current graph again (after a display option changed). */
   remount(): void;
-  /** The static SVG for the current graph, or `undefined` when nothing is loaded. */
+  /**
+   * Core's static SVG for the current graph, or `undefined` when nothing is loaded. The page
+   * prefers the mounted viewer's own `toSvg()`, which draws the map as shown.
+   */
   exportSvg(): string | undefined;
   destroy(): void;
 }

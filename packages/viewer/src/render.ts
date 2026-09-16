@@ -4,6 +4,13 @@ import type { EdgeDisplayData, NodeDisplayData, PartialButFor } from 'sigma/type
 
 import type { ViewerEdgeAttributes, ViewerGraph, ViewerNodeAttributes } from './build-graph.js';
 import { edgeInFocus, type FocusSets } from './focus.js';
+import {
+  LABEL_FONT_STACK,
+  LABEL_GRID_CELL_SIZE,
+  LABEL_SIZE,
+  labelFontSize,
+  labelOffset,
+} from './labels.js';
 import { fadeTowards } from './palette.js';
 import type { ThemeColors } from './theme.js';
 
@@ -77,13 +84,9 @@ export function nodeEmphasis(state: InteractionState, node: string): NodeEmphasi
   return 'normal';
 }
 
-/** Font size for a label: grows with the node's rendered size (like Gephi), within sane bounds. */
-export function labelFontSize(nodeSize: number, baseSize: number): number {
-  return Math.max(baseSize, Math.min(baseSize * 2.4, nodeSize * 1.2));
-}
-
 function labelPosition(data: LabelData, fontSize: number): { x: number; y: number } {
-  return { x: data.x + data.size + 4, y: data.y + fontSize / 3 };
+  const { dx, dy } = labelOffset(data.size, fontSize);
+  return { x: data.x + dx, y: data.y + dy };
 }
 
 /** Label with a halo stroke, so text stays readable over the edge texture and neighboring dots. */
@@ -140,14 +143,14 @@ export function createSigmaSettings(
 
     // Labels
     renderEdgeLabels: false,
-    labelFont: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-    labelSize: coarse ? 13 : 12,
+    labelFont: LABEL_FONT_STACK,
+    labelSize: coarse ? LABEL_SIZE + 1 : LABEL_SIZE,
     labelWeight: '500',
     labelColor: { color: theme.label },
     // Every node is label-eligible (the smallest is 3px); the label grid keeps big graphs tidy.
     labelRenderedSizeThreshold: 3,
     labelDensity: 1,
-    labelGridCellSize: coarse ? 72 : 60,
+    labelGridCellSize: coarse ? LABEL_GRID_CELL_SIZE + 12 : LABEL_GRID_CELL_SIZE,
     defaultDrawNodeLabel: createLabelDrawer(theme),
     defaultDrawNodeHover: createHoverDrawer(theme),
 

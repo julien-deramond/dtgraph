@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildTokenGraph } from '../src/graph.js';
-import { renderTokenGraphToSvg } from '../src/render.js';
+import { renderTokenGraphToSvg, type RenderTokenGraphOptions } from '../src/render.js';
 import type { TokenEdge, TokenNode } from '../src/types.js';
 
 function token(path: string[], overrides: Partial<TokenNode> = {}): TokenNode {
@@ -89,5 +89,49 @@ describe('renderTokenGraphToSvg', () => {
       el.textContent?.includes('script'),
     );
     expect(label?.textContent).toBe(`color.${maliciousSegment}`);
+  });
+
+  it('honours a usable width, rounding it to a whole pixel', () => {
+    const graph = buildTokenGraph([token(['color', 'brand'])], []);
+
+    expect(
+      parseSvg(renderTokenGraphToSvg(graph, { width: 640 })).documentElement.getAttribute('width'),
+    ).toBe('640');
+    expect(
+      parseSvg(renderTokenGraphToSvg(graph, { width: 640.4 })).documentElement.getAttribute(
+        'width',
+      ),
+    ).toBe('640');
+    expect(parseSvg(renderTokenGraphToSvg(graph)).documentElement.getAttribute('width')).toBe(
+      '480',
+    );
+  });
+
+  it('keeps the root attributes well-formed for any width a caller can pass at runtime', () => {
+    const graph = buildTokenGraph([token(['color', 'brand'])], []);
+    // The option is typed `number`, but a type is not a runtime check — a JavaScript consumer can
+    // hand over anything, including something it forwarded from its own untrusted input.
+    const unusable: unknown[] = [
+      '480" onload="ignored',
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      -1,
+      0,
+      1e21,
+      null,
+      {},
+      [],
+    ];
+
+    for (const width of unusable) {
+      const doc = parseSvg(renderTokenGraphToSvg(graph, { width } as RenderTokenGraphOptions));
+      const root = doc.documentElement;
+
+      expect(doc.querySelector('parsererror')).toBeNull();
+      // Whatever came in, both attributes it feeds are a plain positive integer.
+      expect(root.getAttribute('width')).toMatch(/^[1-9][0-9]*$/);
+      expect(root.getAttribute('viewBox')).toMatch(/^0 0 [1-9][0-9]* [1-9][0-9]*$/);
+      expect(root.attributes).toHaveLength(6);
+    }
   });
 });

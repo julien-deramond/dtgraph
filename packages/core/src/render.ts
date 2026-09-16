@@ -7,6 +7,13 @@ const LABEL_X = 28;
 const EDGE_CURVE_X = 320;
 const EDGE_LABEL_X = EDGE_CURVE_X - 24;
 
+const DEFAULT_WIDTH = 480;
+// A width is only ever interpolated into the output as a bare attribute value, so it is kept in
+// the range that always stringifies as plain digits: JavaScript switches to exponent notation
+// ("1e+21") at 1e21, which is not a valid SVG length, and no real viewport is 100000px wide.
+const MIN_WIDTH = 1;
+const MAX_WIDTH = 100_000;
+
 const ALIAS_STROKE = '#2563eb';
 const COMPOSITE_STROKE = '#9333ea';
 
@@ -30,6 +37,19 @@ function escapeXml(value: string): string {
         return '&apos;';
     }
   });
+}
+
+/**
+ * Coerce a caller-supplied width into a number that is safe to place in the output. `width` is
+ * typed as a `number`, but a type is not a runtime check: a JavaScript consumer of this package
+ * can pass anything, including a value it forwarded from its own untrusted input, and a
+ * non-numeric one would otherwise reach an attribute verbatim. Rounding and clamping yields a
+ * plain integer whatever comes in. A width is presentational, so an unusable value falls back to
+ * the default rather than throwing and taking the whole render down with it.
+ */
+function resolveWidth(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_WIDTH;
+  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)));
 }
 
 function pathKey(path: string[]): string {
@@ -72,7 +92,10 @@ function renderEdge(edge: TokenEdge, yByPath: Map<string, number>): string | und
 }
 
 export interface RenderTokenGraphOptions {
-  /** Pixel width of the returned SVG's `viewBox`/`width`. Defaults to `480`. */
+  /**
+   * Pixel width of the returned SVG's `viewBox`/`width`. Rounded and clamped to a usable range;
+   * anything that is not a finite number falls back to the default. Defaults to `480`.
+   */
   width?: number;
 }
 
@@ -83,15 +106,17 @@ export interface RenderTokenGraphOptions {
  *
  * Every piece of token-derived text (paths, descriptions, alias references, member names) is
  * escaped via {@link escapeXml} before being placed in the output — never concatenated or
- * assigned via `innerHTML` — so this is safe to call with untrusted token content (e.g. the
- * website playground's user-uploaded JSON). Returns a plain string, so it works identically in
- * a browser and in Node (e.g. the CLI writing an `.svg` file) without touching the DOM.
+ * assigned via `innerHTML` — and every numeric option is coerced via {@link resolveWidth} rather
+ * than trusted to match its declared type, so this is safe to call with untrusted token content
+ * and untrusted options alike (e.g. the website playground's user-uploaded JSON). Returns a
+ * plain string, so it works identically in a browser and in Node (e.g. the CLI writing an
+ * `.svg` file) without touching the DOM.
  */
 export function renderTokenGraphToSvg(
   graph: TokenGraph,
   options: RenderTokenGraphOptions = {},
 ): string {
-  const width = options.width ?? 480;
+  const width = resolveWidth(options.width);
   const rowCount = graph.nodes.length;
   const height = rowCount === 0 ? MARGIN_Y * 2 : MARGIN_Y * 2 + (rowCount - 1) * ROW_HEIGHT;
 

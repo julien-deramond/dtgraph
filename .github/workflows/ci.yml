@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Lint, build and test only ever read the checked-out source; nothing here needs to write back
+# to the repository or its metadata.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Lint, build & test

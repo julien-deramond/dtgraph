@@ -118,14 +118,23 @@ const links = [
     border-color: var(--line-strong);
     color: var(--fg-strong);
   }
+  /*
+   * 1.25rem, not the 1rem the rest of the header's icons use: the mark carries the Octocat in
+   * negative space, and at 16px those cutouts are about a pixel wide — Firefox rasterized them
+   * away and left a plain blob where the ears and face should be (Chromium's anti-aliasing hid
+   * it). At 20px the silhouette survives in both engines, and the taller icon puts the button
+   * at the same 2rem height as the theme toggle beside it.
+   */
   .site-header__star-mark {
-    width: 1rem;
-    height: 1rem;
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
     fill: currentColor;
   }
   .site-header__star-glyph {
-    width: 0.95rem;
-    height: 0.95rem;
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;

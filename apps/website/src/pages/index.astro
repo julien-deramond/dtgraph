@@ -390,10 +390,29 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     let colorBy: ColorBy = 'group';
     let viewer: TokenGraphViewer | undefined;
 
+    let tokenOpen = false;
+
     const playground = createPlayground({ output, error }, (container, graph) => {
-      viewer = mountTokenGraphViewer(container, graph, { theme, colorBy });
+      tokenOpen = false;
+      viewer = mountTokenGraphViewer(container, graph, {
+        theme,
+        colorBy,
+        onSelect: (token) => {
+          tokenOpen = token !== undefined;
+          syncHint();
+        },
+      });
       return viewer;
     });
+
+    /*
+     * The hint is onboarding, so it goes as soon as it has nothing to say: no graph to drive, or
+     * a token already open — on a narrow screen the viewer's detail panel is a sheet that comes
+     * up from the bottom, exactly where this pill sits.
+     */
+    function syncHint(): void {
+      hint.hidden = playground.graph === undefined || tokenOpen;
+    }
 
     const format = new Intl.NumberFormat();
     const count = (n: number, noun: string): string =>
@@ -537,7 +556,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       // ignoring the click and advertising gestures over an empty canvas.
       fitButton.disabled = graph === undefined;
       exportButton.disabled = graph === undefined;
-      hint.hidden = graph === undefined;
+      syncHint();
     }
 
     function load(files: { source: string; content: string }[]): void {

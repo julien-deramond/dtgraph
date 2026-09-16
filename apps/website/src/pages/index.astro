@@ -634,7 +634,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     fitButton.addEventListener('click', () => viewer?.fit());
 
     exportButton.addEventListener('click', () => {
-      // What you see: the mounted viewer serializes its own map (layout, palette, dot sizes).
+      // What you see: the mounted viewer serializes its own map (layout, palette, dot sizes)
+      // and whatever it is spotlighting — a selected token's chains, a solo'd legend group.
       // Without one — no WebGL, nothing loaded — fall back to core's static list rendering.
       const svg = viewer?.toSvg() ?? playground.exportSvg();
       if (svg === undefined) return;

@@ -10,6 +10,7 @@ import {
   type ViewerGraph,
   type ViewerNodeAttributes,
 } from './build-graph.js';
+import { createInteractionState } from './emphasis.js';
 import {
   COMPACT_WIDTH,
   hasCoarsePointer,
@@ -20,7 +21,7 @@ import {
 import { renderViewerGraphToSvg, type ExportSvgOptions } from './export-svg.js';
 import { collectFocus } from './focus.js';
 import { layoutViewerGraph, viewerExtent, type LayoutOptions } from './layout.js';
-import { createInteractionState, createSigmaSettings } from './render.js';
+import { createSigmaSettings } from './render.js';
 import { searchTokens } from './search.js';
 import { THEMES, type ViewerTheme } from './theme.js';
 import { el } from './ui/dom.js';
@@ -60,7 +61,9 @@ export interface TokenGraphViewer {
   readonly selected: string | undefined;
   /**
    * The map as a standalone SVG string: same positions, colors and sizes as the canvas, framed
-   * like `fit()`, in the viewer's theme unless `options` says otherwise. See
+   * like `fit()`, in the viewer's theme unless `options` says otherwise, and carrying whatever
+   * the map is spotlighting right now — the selected token and its chains, a solo'd legend
+   * category. Pass `{ emphasis: {} }` for the map at rest instead. See
    * {@link renderViewerGraphToSvg} for what it does and does not carry over.
    */
   toSvg(options?: ExportSvgOptions): string;
@@ -370,7 +373,10 @@ export function mountTokenGraphViewer(
     get selected() {
       return state.selected ?? undefined;
     },
-    toSvg: (svgOptions) => renderViewerGraphToSvg(graph, { theme: themeName, ...svgOptions }),
+    // The live interaction state, so an export taken with a token selected is the picture on
+    // screen rather than the map at rest. A caller who wants the map at rest overrides it.
+    toSvg: (svgOptions) =>
+      renderViewerGraphToSvg(graph, { theme: themeName, emphasis: state, ...svgOptions }),
     destroy: () => {
       document.removeEventListener('keydown', onKeydown);
       observer?.disconnect();

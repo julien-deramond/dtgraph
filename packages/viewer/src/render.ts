@@ -3,7 +3,13 @@ import type { Settings } from 'sigma/settings';
 import type { EdgeDisplayData, NodeDisplayData, PartialButFor } from 'sigma/types';
 
 import type { ViewerEdgeAttributes, ViewerGraph, ViewerNodeAttributes } from './build-graph.js';
-import { edgeInFocus, type FocusSets } from './focus.js';
+import {
+  edgeEmphasis,
+  type InteractionState,
+  isAnchored,
+  LIT_EDGE_THICKNESS,
+  nodeEmphasis,
+} from './emphasis.js';
 import {
   LABEL_FONT_STACK,
   LABEL_GRID_CELL_SIZE,
@@ -17,22 +23,6 @@ import type { ThemeColors } from './theme.js';
 export type ViewerSettings = Settings<ViewerNodeAttributes, ViewerEdgeAttributes>;
 
 type LabelData = PartialButFor<NodeDisplayData, 'x' | 'y' | 'size' | 'label' | 'color'>;
-
-/**
- * Mutable interaction state the Sigma reducers read on every frame. Kept as a plain object (not
- * closed-over `let`s) so the mount code can update it and just ask Sigma to refresh.
- */
-export interface InteractionState {
-  hovered: string | null;
-  /** The hovered node plus its direct neighbors in both directions. */
-  neighborhood: Set<string>;
-  /** The clicked/searched token, if any, with its transitive relations. */
-  selected: string | null;
-  focus: FocusSets | null;
-  /** A legend category to show alone (everything else dims), keyed like `categoryOf`. */
-  solo: string | null;
-  categoryOf: (node: string) => string;
-}
 
 /**
  * Pixels added to every token dot's radius where the pointer is a finger. Sigma hit-tests the
@@ -56,32 +46,6 @@ export interface SigmaSettingsOptions {
   coarsePointer?: boolean;
   /** Breathing room around the framed graph, in pixels. See `stagePaddingFor`. */
   stagePadding?: number;
-}
-
-export function createInteractionState(
-  categoryOf: (node: string) => string = () => '',
-): InteractionState {
-  return {
-    hovered: null,
-    neighborhood: new Set(),
-    selected: null,
-    focus: null,
-    solo: null,
-    categoryOf,
-  };
-}
-
-/** How a node should draw given the current interaction state. */
-export type NodeEmphasis = 'lit' | 'normal' | 'dimmed';
-
-export function nodeEmphasis(state: InteractionState, node: string): NodeEmphasis {
-  if (state.solo !== null && state.categoryOf(node) !== state.solo) return 'dimmed';
-  if (state.hovered !== null) return state.neighborhood.has(node) ? 'lit' : 'dimmed';
-  if (state.selected !== null && state.focus !== null) {
-    if (node === state.selected) return 'lit';
-    return state.focus.all.has(node) ? 'lit' : 'dimmed';
-  }
-  return 'normal';
 }
 
 function labelPosition(data: LabelData, fontSize: number): { x: number; y: number } {
@@ -175,34 +139,18 @@ export function createSigmaSettings(
       // Lit: keep the color, draw on top. Labels are forced for the hovered/selected token and
       // its direct neighbors; the wider focus set stays subject to the label grid so a primitive
       // with hundreds of dependents doesn't bury the map in text.
-      const anchor = state.hovered ?? state.selected;
-      const direct = anchor !== null && (node === anchor || graph.areNeighbors(anchor, node));
       return {
         ...sized,
         zIndex: data.zIndex + 1_000_000,
-        forceLabel: direct,
+        forceLabel: isAnchored(graph, state, node),
         highlighted: node === state.selected && state.hovered === null,
       };
     },
     edgeReducer: (edge, data): Partial<EdgeDisplayData> => {
-      const [source, target] = graph.extremities(edge);
-      const dimmed = {
-        ...data,
-        color: fadeTowards(data.color, theme.background, theme.fadedEdgeStrength),
-      };
-      const lit = { ...data, size: 1.6, zIndex: 1 };
-      if (state.solo !== null) {
-        if (state.categoryOf(source) !== state.solo && state.categoryOf(target) !== state.solo) {
-          return dimmed;
-        }
-      }
-      if (state.hovered !== null) {
-        return source === state.hovered || target === state.hovered ? lit : dimmed;
-      }
-      if (state.selected !== null && state.focus !== null) {
-        return edgeInFocus(graph, edge, state.selected, state.focus) ? lit : dimmed;
-      }
-      return { ...data, color: fadeTowards(data.color, theme.background, theme.edgeStrength) };
+      const emphasis = edgeEmphasis(graph, state, edge);
+      if (emphasis === 'lit') return { ...data, size: LIT_EDGE_THICKNESS, zIndex: 1 };
+      const strength = emphasis === 'dimmed' ? theme.fadedEdgeStrength : theme.edgeStrength;
+      return { ...data, color: fadeTowards(data.color, theme.background, strength) };
     },
   };
 }

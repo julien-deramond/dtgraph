@@ -1,5 +1,12 @@
 # @dtgraph/storybook
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`69e03b7`](https://github.com/julien-deramond/dtgraph/commit/69e03b7d7c778152744ddd562db35b0445ca46de)]:
+  - @dtgraph/viewer@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

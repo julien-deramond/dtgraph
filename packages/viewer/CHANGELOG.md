@@ -1,5 +1,27 @@
 # @dtgraph/viewer
 
+## 0.4.0
+
+### Minor Changes
+
+- [#120](https://github.com/julien-deramond/dtgraph/pull/120) [`b6514ee`](https://github.com/julien-deramond/dtgraph/commit/b6514eea690772ba1fad2017207289461e04da87) Thanks [@julien-deramond](https://github.com/julien-deramond)! - Export the map as it stands, not only at rest: `viewer.toSvg()` now carries whatever the viewer is
+  spotlighting, so a file taken with a token selected has that token ringed, its upstream chain and
+  its blast radius lit and labelled, and everything else faded the way the canvas fades it — a solo'd
+  legend group too. Until now clicking a token changed the screen and not the download, which made
+  the export useless for the thing people reach for it for: showing one token's reach. The new
+  `emphasis` option on `renderViewerGraphToSvg` says what to spotlight (pass `{}` for the map at
+  rest), and the selection is named in the SVG's accessible title.
+
+### Patch Changes
+
+- [#120](https://github.com/julien-deramond/dtgraph/pull/120) [`b6514ee`](https://github.com/julien-deramond/dtgraph/commit/b6514eea690772ba1fad2017207289461e04da87) Thanks [@julien-deramond](https://github.com/julien-deramond)! - Hold the colors in the SVG export to colors. `renderViewerGraphToSvg` takes a whole `ThemeColors`
+  — node palette included — from its caller, and dropped those strings into `fill` and `stroke`
+  attributes as they came: a theme whose `background` was `'"><script>…'` escaped its attribute and
+  landed as markup in the exported file. Colors now have to look like colors (hex, `rgb()`/`hsl()`,
+  a bare keyword) or they become `currentColor`, so a malformed theme costs a wrong color instead.
+  Token-derived text was already escaped and is unchanged. Fixes the CodeQL
+  `js/html-constructed-from-input` alerts on the exporter.
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@dtgraph/mdx",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Render a live DTCG token graph inline in MDX/Astro content",
   "license": "MIT",
   "author": "Julien D\u00e9ramond",

@@ -27,6 +27,30 @@ export interface InteractionState {
   categoryOf: (node: string) => string;
 }
 
+/**
+ * Pixels added to every token dot's radius where the pointer is a finger. Sigma hit-tests the
+ * pixels it actually drew, so a 3px primitive is a 6px target.
+ *
+ * Added rather than multiplied, because the scale is `base + 2.6 * sqrt(dependents)`: a constant
+ * moves the floor exactly like `baseNodeSize` already does for small graphs, and leaves the
+ * differences between dots — the blast radius the map is about — where they were. Multiplying
+ * stretches the top of the scale into overlapping blobs.
+ *
+ * Small, because it is the wrong tool past a point: in a 500-token hairball every dot in the core
+ * is small, and lifting them enough to hit at rest closes the gaps that make the cluster readable.
+ * What actually makes a crowded map tappable is zooming into it, which grows the dots anyway. So
+ * this buys the sparse and mid-sized graphs — where dots stand alone and a tap is a real gesture —
+ * and leaves the dense ones legible.
+ */
+export const COARSE_POINTER_NODE_LIFT = 1.5;
+
+export interface SigmaSettingsOptions {
+  /** The primary pointer is a finger or stylus: bigger dots and bigger labels. */
+  coarsePointer?: boolean;
+  /** Breathing room around the framed graph, in pixels. See `stagePaddingFor`. */
+  stagePadding?: number;
+}
+
 export function createInteractionState(
   categoryOf: (node: string) => string = () => '',
 ): InteractionState {
@@ -101,7 +125,10 @@ export function createSigmaSettings(
   graph: ViewerGraph,
   theme: ThemeColors,
   state: InteractionState,
+  options: SigmaSettingsOptions = {},
 ): Partial<ViewerSettings> {
+  const coarse = options.coarsePointer ?? false;
+  const nodeLift = coarse ? COARSE_POINTER_NODE_LIFT : 0;
   return {
     // Rendering programs
     defaultNodeType: 'circle',
@@ -114,40 +141,41 @@ export function createSigmaSettings(
     // Labels
     renderEdgeLabels: false,
     labelFont: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-    labelSize: 12,
+    labelSize: coarse ? 13 : 12,
     labelWeight: '500',
     labelColor: { color: theme.label },
     // Every node is label-eligible (the smallest is 3px); the label grid keeps big graphs tidy.
     labelRenderedSizeThreshold: 3,
     labelDensity: 1,
-    labelGridCellSize: 60,
+    labelGridCellSize: coarse ? 72 : 60,
     defaultDrawNodeLabel: createLabelDrawer(theme),
     defaultDrawNodeHover: createHoverDrawer(theme),
 
     // Camera: ratio < 1 is zoomed in. Allow deep zoom into dense clusters, modest zoom out.
     minCameraRatio: 0.005,
     maxCameraRatio: 2.5,
-    stagePadding: 48,
+    stagePadding: options.stagePadding ?? 48,
     zoomingRatio: 1.5,
     doubleClickZoomingRatio: 2.5,
 
     nodeReducer: (node, data): Partial<NodeDisplayData> => {
       const emphasis = nodeEmphasis(state, node);
+      const sized = nodeLift === 0 ? data : { ...data, size: data.size + nodeLift };
       if (emphasis === 'dimmed') {
         return {
-          ...data,
+          ...sized,
           color: fadeTowards(data.color, theme.background, theme.fadedNodeStrength),
           label: null,
         };
       }
-      if (emphasis === 'normal') return data;
+      if (emphasis === 'normal') return sized;
       // Lit: keep the color, draw on top. Labels are forced for the hovered/selected token and
       // its direct neighbors; the wider focus set stays subject to the label grid so a primitive
       // with hundreds of dependents doesn't bury the map in text.
       const anchor = state.hovered ?? state.selected;
       const direct = anchor !== null && (node === anchor || graph.areNeighbors(anchor, node));
       return {
-        ...data,
+        ...sized,
         zIndex: data.zIndex + 1_000_000,
         forceLabel: direct,
         highlighted: node === state.selected && state.hovered === null,

@@ -36,3 +36,11 @@ export type { ResolvedValue } from './resolve-value.js';
 export { injectViewerStyles, VIEWER_CSS } from './inject-styles.js';
 export { THEMES } from './theme.js';
 export type { ThemeColors, ViewerTheme } from './theme.js';
+export {
+  COMPACT_WIDTH,
+  hasCoarsePointer,
+  isFullBleed,
+  motionDuration,
+  prefersReducedMotion,
+  stagePaddingFor,
+} from './environment.js';

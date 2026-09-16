@@ -1,5 +1,15 @@
 # @dtgraph/viewer
 
+## 0.4.1
+
+### Patch Changes
+
+- [#122](https://github.com/julien-deramond/dtgraph/pull/122) [`d3ab656`](https://github.com/julien-deramond/dtgraph/commit/d3ab65684859aba4adf599b12682af6f7b05159a) Thanks [@julien-deramond](https://github.com/julien-deramond)! - Coerce the token counts in the exported SVG's accessible title instead of trusting them. `order`
+  and `size` are typed as numbers, but `graph` is a parameter and a type is not a runtime check: both
+  reach the title text with no escape between them and the reader. They are now coerced the way
+  `renderTokenGraphToSvg` coerces its width in core. Clears the last CodeQL
+  `js/html-constructed-from-input` alert on the exporter.
+
 ## 0.4.0
 
 ### Minor Changes

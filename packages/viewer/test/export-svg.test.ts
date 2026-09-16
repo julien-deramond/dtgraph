@@ -102,6 +102,35 @@ describe('renderViewerGraphToSvg', () => {
     expect(svg).toContain('&lt;script&gt;');
   });
 
+  it('refuses colors that are not colors, whatever the theme claims to be', () => {
+    // `theme` takes a whole color set from the caller, so every one of these is a `string` as
+    // far as the type system is concerned. None of them may reach the output as markup.
+    const hostile = '</svg><script>alert(1)</script>';
+    const graph = buildViewerGraph(tokenGraphFrom(SAMPLE), { palette: [hostile] });
+    layoutViewerGraph(graph);
+    const svg = renderViewerGraphToSvg(graph, {
+      labels: 'all',
+      theme: {
+        ...THEMES.dark,
+        background: '"><script>alert(1)</script><rect fill="',
+        label: '" onload="alert(1)',
+        labelHalo: 'rgb(0, 0, 0)',
+        hoverRing: '#fff',
+        palette: [hostile],
+      },
+      emphasis: { selected: 'semantic.primary' },
+    });
+    expect(svg).not.toContain('<script');
+    expect(svg).not.toContain('onload');
+    expect(svg).toContain('currentColor');
+    // The colors that were colors are left exactly as they were given.
+    expect(svg).toContain('stroke="rgb(0, 0, 0)"');
+    expect(svg).toContain('stroke="#fff"');
+    const document = new DOMParser().parseFromString(svg, 'image/svg+xml');
+    expect(document.querySelector('parsererror')).toBe(null);
+    expect(document.querySelectorAll('script')).toHaveLength(0);
+  });
+
   it('returns a well-formed, empty-but-valid document for an empty graph', () => {
     const svg = renderViewerGraphToSvg(buildViewerGraph(tokenGraphFrom({})));
     expect(svg.startsWith('<svg')).toBe(true);

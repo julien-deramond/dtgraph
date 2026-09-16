@@ -47,6 +47,24 @@ function round(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
+/**
+ * The CSS color shapes the viewer produces: hex, `rgb()`/`hsl()` (with or without alpha) and
+ * bare keywords. No form here can contain a quote, an angle bracket or an ampersand.
+ */
+const CSS_COLOR = /^(?:#[0-9a-f]{3,8}|[a-z]+|(?:rgb|hsl)a?\([0-9a-z.,%\s/+-]*\))$/i;
+
+/**
+ * Colors land in the markup as raw attribute values, and they are not all ours: `options.theme`
+ * takes a whole `ThemeColors` — node palette included — from the caller, so the string that is
+ * supposed to be `"#0b0d12"` is only a `string` as far as the type system is concerned. Anything
+ * that is not a color the viewer could have produced becomes `currentColor`, so a malformed theme
+ * costs a wrong color rather than markup escaping its attribute. Token-derived text takes the
+ * other door, {@link escapeXml}; between the two, nothing reaches the output unchecked.
+ */
+function cssColor(value: string): string {
+  return CSS_COLOR.test(value) ? value : 'currentColor';
+}
+
 export interface ExportSvgOptions {
   /** Theme name, or a full color set. Defaults to `"dark"`, like the viewer. */
   theme?: ViewerTheme | ThemeColors;
@@ -129,7 +147,7 @@ function renderNode(node: PlacedNode, theme: ThemeColors): string {
       : node.color;
   return (
     `<circle cx="${round(node.x)}" cy="${round(node.y)}" r="${round(node.size)}" ` +
-    `fill="${fill}"><title>${escapeXml(node.key)}</title></circle>`
+    `fill="${cssColor(fill)}"><title>${escapeXml(node.key)}</title></circle>`
   );
 }
 
@@ -137,7 +155,7 @@ function renderNode(node: PlacedNode, theme: ThemeColors): string {
 function renderRing(node: PlacedNode, theme: ThemeColors): string {
   return (
     `<circle cx="${round(node.x)}" cy="${round(node.y)}" r="${round(node.size + 3)}" ` +
-    `fill="none" stroke="${theme.hoverRing}" stroke-width="2" />`
+    `fill="none" stroke="${cssColor(theme.hoverRing)}" stroke-width="2" />`
   );
 }
 
@@ -149,7 +167,8 @@ function renderLabel(node: PlacedNode, theme: ThemeColors): string {
   // exactly like the canvas drawer's strokeText/fillText pair.
   return (
     `<text x="${round(node.x + dx)}" y="${round(node.y + dy)}" font-size="${round(fontSize)}" ` +
-    `fill="${theme.label}" stroke="${theme.labelHalo}" stroke-width="${round(haloWidth)}" ` +
+    `fill="${cssColor(theme.label)}" stroke="${cssColor(theme.labelHalo)}" ` +
+    `stroke-width="${round(haloWidth)}" ` +
     `stroke-linejoin="round" paint-order="stroke">${escapeXml(node.label)}</text>`
   );
 }
@@ -159,7 +178,8 @@ function renderLabel(node: PlacedNode, theme: ThemeColors): string {
  * Sigma's arrow program draws. The head is an explicit triangle rather than a `<marker>`, so the
  * file survives editors and converters that ignore marker color inheritance.
  */
-function renderEdge(from: PlacedNode, to: PlacedNode, color: string, thickness: number): string {
+function renderEdge(from: PlacedNode, to: PlacedNode, rawColor: string, thickness: number): string {
+  const color = cssColor(rawColor);
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const distance = Math.hypot(dx, dy);
@@ -200,8 +220,11 @@ function renderEdge(from: PlacedNode, to: PlacedNode, color: string, thickness: 
  * the whole map, framed like `fit()`. Pass the graph from a mounted viewer (`viewer.graph`), or
  * build and lay one out yourself with `buildViewerGraph` + `layoutViewerGraph`.
  *
- * Every piece of token-derived text is escaped before it reaches the markup, so this is safe to
- * call with untrusted token files — the same guarantee `renderTokenGraphToSvg` makes in core.
+ * Nothing reaches the markup unchecked: token-derived text (labels, paths) is escaped via
+ * {@link escapeXml}, colors — which a caller supplies wholesale through `options.theme` — are
+ * held to {@link cssColor}, and every dimension is coerced through arithmetic rather than
+ * trusted to match its declared type. So this is safe to call with untrusted token files and
+ * untrusted options alike, the same guarantee `renderTokenGraphToSvg` makes in core.
  */
 export function renderViewerGraphToSvg(graph: ViewerGraph, options: ExportSvgOptions = {}): string {
   const theme = typeof options.theme === 'object' ? options.theme : THEMES[options.theme ?? 'dark'];
@@ -295,7 +318,7 @@ export function renderViewerGraphToSvg(graph: ViewerGraph, options: ExportSvgOpt
 
   const background =
     (options.background ?? true)
-      ? `<rect width="${width}" height="${height}" fill="${theme.background}" />`
+      ? `<rect width="${width}" height="${height}" fill="${cssColor(theme.background)}" />`
       : '';
   // The selection is the subject of a spotlit export, so say so where a screen reader will read
   // it: the alternative is an image announced as a graph of 950 tokens with no hint of the one.

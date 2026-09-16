@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SAMPLE, tokenGraphFrom } from './helpers.js';
 
@@ -45,6 +45,12 @@ class FakeSigma {
   setCustomBBox(bbox: unknown) {
     this.bbox = bbox;
   }
+  setSetting(key: string, value: unknown) {
+    this.settings[key] = value;
+  }
+  viewportToFramedGraph(coordinates: { x: number; y: number }) {
+    return coordinates;
+  }
   kill() {
     this.killed = true;
   }
@@ -72,11 +78,26 @@ function makeContainer(): HTMLElement {
   return container;
 }
 
+/** A touchscreen, and a container of the given size on a 390x844 screen. */
+function touchContainer(rect: { width: number; height: number }): HTMLElement {
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)' }));
+  vi.stubGlobal('innerWidth', 390);
+  vi.stubGlobal('innerHeight', 844);
+  const container = makeContainer();
+  container.getBoundingClientRect = () =>
+    ({ ...rect, top: 0, left: 0, right: rect.width, bottom: rect.height }) as DOMRect;
+  return container;
+}
+
 describe('mountTokenGraphViewer', () => {
   beforeEach(() => {
     instances.length = 0;
     failConstruction = null;
     document.body.innerHTML = '';
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('mounts a stage into the container and hands Sigma the laid-out graph', () => {
@@ -218,6 +239,57 @@ describe('mountTokenGraphViewer', () => {
     expect(container.querySelector('.dtgraph-viewer__ui')).toBeNull();
   });
 
+  it('keeps hold of touch gestures when it covers the screen', () => {
+    const container = touchContainer({ width: 390, height: 720 });
+    mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));
+    expect(container.dataset.fullBleed).toBe('true');
+    expect(container.dataset.gesture).toBe('map');
+  });
+
+  it('lets the page scroll over an embedded map until it is tapped, and hands it back', () => {
+    const container = touchContainer({ width: 358, height: 480 });
+    mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));
+    expect(container.dataset.fullBleed).toBe('false');
+    expect(container.dataset.gesture).toBe('page');
+
+    const veil = container.querySelector<HTMLElement>('.dtgraph-viewer__veil');
+    veil?.click();
+    expect(container.dataset.gesture).toBe('held');
+
+    container.querySelector<HTMLElement>('.dtgraph-viewer__release')?.click();
+    expect(container.dataset.gesture).toBe('page');
+  });
+
+  it('offers the gesture bargain even with the chrome turned off', () => {
+    const container = touchContainer({ width: 358, height: 480 });
+    mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE), { chrome: false });
+    expect(container.querySelector('.dtgraph-viewer__search')).toBeNull();
+    expect(container.querySelector('.dtgraph-viewer__veil')).not.toBeNull();
+  });
+
+  it('sizes dots and stage padding for a finger on a small screen', () => {
+    const container = touchContainer({ width: 358, height: 480 });
+    mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));
+    const nodeReducer = instances[0].settings.nodeReducer as (
+      node: string,
+      data: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    // Sigma hit-tests the pixels it drew, so the floor of the size scale moves up.
+    expect(
+      nodeReducer('spacing.md', { color: '#fff', label: 'x', zIndex: 0, size: 4 }),
+    ).toMatchObject({ size: 5.5 });
+    expect(instances[0].settings.stagePadding).toBe(48); // clientWidth is 0 under jsdom
+  });
+
+  it('lands the camera instantly when the visitor asked for less motion', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+    }));
+    const viewer = mountTokenGraphViewer(makeContainer(), tokenGraphFrom(SAMPLE));
+    viewer.zoomTo('color.blue');
+    expect(instances[0].camera.animate).toHaveBeenCalledWith(expect.anything(), { duration: 0 });
+  });
+
   it('cleans up completely on destroy', () => {
     const container = makeContainer();
     const viewer = mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE));
@@ -226,6 +298,7 @@ describe('mountTokenGraphViewer', () => {
     expect(container.children).toHaveLength(0);
     expect(container.classList.contains('dtgraph-viewer')).toBe(false);
     expect(container.dataset.theme).toBeUndefined();
+    expect(container.dataset.gesture).toBeUndefined();
   });
 
   it('wraps renderer start-up failures in an actionable error and leaves the container clean', () => {

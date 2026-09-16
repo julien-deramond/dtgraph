@@ -2,14 +2,35 @@
  * @dtgraph/viewer stylesheet. Import once: `import '@dtgraph/viewer/style.css'`.
  * Every color is a custom property so hosts can retheme; the canvas-side colors in theme.ts
  * mirror the defaults here.
+ *
+ * The chrome adapts to the container, not the viewport: the viewer is a 480px-tall box in a docs
+ * page as often as it is a whole phone screen, and a 4K desktop can hold both at once. So every
+ * layout rule below is a `@container` query against `.dtgraph-viewer` and every overlay height is
+ * in `cqh`. Input is a separate question from size — `pointer`/`hover` queries decide target
+ * sizes and which affordances exist, and `data-gesture` (set in mount.ts) decides whether a
+ * finger pans the map or scrolls the page behind it.
  */
 .dtgraph-viewer {
   --dtgraph-viewer-bg: #0b0d12;
   --dtgraph-viewer-fg: #f4f4f5;
   --dtgraph-viewer-font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
+  /* Distance from the container edge to the chrome. The four insets resolve to it unless the
+   * viewer owns the whole screen, where they grow to clear the notch and the home indicator. */
+  --dtgraph-viewer-gutter: 12px;
+  --dtgraph-viewer-inset-top: var(--dtgraph-viewer-gutter);
+  --dtgraph-viewer-inset-right: var(--dtgraph-viewer-gutter);
+  --dtgraph-viewer-inset-bottom: var(--dtgraph-viewer-gutter);
+  --dtgraph-viewer-inset-left: var(--dtgraph-viewer-gutter);
+  /* Width the collapsed legend occupies in the narrow composition, which the search box keeps
+   * clear of. Set here so both rules read the same number. */
+  --dtgraph-viewer-legend-width: 7rem;
+  /* Room reserved at the bottom for the "Done" pill, only while it is showing. */
+  --dtgraph-viewer-release-space: 0px;
+
   position: relative;
   box-sizing: border-box;
+  container: dtgraph-viewer / size;
   width: 100%;
   height: 100%;
   min-height: 240px;
@@ -18,9 +39,6 @@
   color: var(--dtgraph-viewer-fg);
   font-family: var(--dtgraph-viewer-font);
   border-radius: var(--dtgraph-viewer-radius, 0);
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 .dtgraph-viewer[data-theme='light'] {
@@ -28,14 +46,32 @@
   --dtgraph-viewer-fg: #18181b;
 }
 
+/* Only a viewer that owns the screen may reach into the safe areas; inside an embed those insets
+ * describe the phone, not the box, and would push the chrome around for no reason. */
+.dtgraph-viewer[data-full-bleed='true'] {
+  --dtgraph-viewer-inset-top: max(var(--dtgraph-viewer-gutter), env(safe-area-inset-top));
+  --dtgraph-viewer-inset-right: max(var(--dtgraph-viewer-gutter), env(safe-area-inset-right));
+  --dtgraph-viewer-inset-bottom: max(var(--dtgraph-viewer-gutter), env(safe-area-inset-bottom));
+  --dtgraph-viewer-inset-left: max(var(--dtgraph-viewer-gutter), env(safe-area-inset-left));
+}
+
 .dtgraph-viewer__stage {
   position: absolute;
   inset: 0;
   cursor: grab;
+  /* The map claims every gesture on it — and only it, so the panel below can still be scrolled
+   * and its text still selected. `data-gesture` hands this back when the page needs it. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .dtgraph-viewer__stage:active {
   cursor: grabbing;
+}
+
+.dtgraph-viewer[data-gesture='page'] .dtgraph-viewer__stage {
+  touch-action: auto;
 }
 
 /* --- Overlay chrome: search (top left), legend (bottom left), detail panel (right) ---------- */
@@ -48,6 +84,7 @@
   --dtgraph-viewer-panel-hover: rgba(255, 255, 255, 0.07);
   --dtgraph-viewer-accent: #60a5fa;
   --dtgraph-viewer-code-bg: rgba(0, 0, 0, 0.35);
+  --dtgraph-viewer-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .dtgraph-viewer[data-theme='light'] {
@@ -58,6 +95,7 @@
   --dtgraph-viewer-panel-hover: rgba(0, 0, 0, 0.05);
   --dtgraph-viewer-accent: #2563eb;
   --dtgraph-viewer-code-bg: rgba(0, 0, 0, 0.05);
+  --dtgraph-viewer-shadow: 0 10px 30px rgba(24, 24, 27, 0.14);
 }
 
 .dtgraph-viewer__ui {
@@ -67,6 +105,8 @@
   font-size: 13px;
   line-height: 1.4;
   color: var(--dtgraph-viewer-panel-fg);
+  /* The chrome is text: let it be read, selected and copied like text. */
+  -webkit-touch-callout: default;
 }
 
 .dtgraph-viewer__ui > * {
@@ -81,16 +121,34 @@
   border: 1px solid var(--dtgraph-viewer-panel-line);
   border-radius: 10px;
   background: var(--dtgraph-viewer-panel-bg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--dtgraph-viewer-shadow);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Anything that scrolls inside the chrome takes vertical drags for itself and keeps them: the map
+ * behind it must not pan, and reaching the end of a list must not start scrolling the host page. */
+.dtgraph-viewer__search-results,
+.dtgraph-viewer__legend-list,
+.dtgraph-viewer__panel {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
 /* Search */
 .dtgraph-viewer__search {
-  top: 12px;
-  left: 12px;
-  width: min(320px, calc(100% - 24px));
+  top: var(--dtgraph-viewer-inset-top);
+  left: var(--dtgraph-viewer-inset-left);
+  width: min(
+    320px,
+    calc(100% - var(--dtgraph-viewer-inset-left) - var(--dtgraph-viewer-inset-right))
+  );
+}
+
+/* While the visitor is typing, the results own the top of the map — including the space the open
+ * legend takes in the narrow composition. */
+.dtgraph-viewer__search:focus-within {
+  z-index: 2;
 }
 
 .dtgraph-viewer__search-input {
@@ -130,7 +188,7 @@
 }
 
 .dtgraph-viewer__search-results {
-  max-height: 50vh;
+  max-height: min(50cqh, 22rem);
   margin: 0;
   padding: 4px;
   border-top: 1px solid var(--dtgraph-viewer-panel-line);
@@ -153,8 +211,7 @@
   cursor: default;
 }
 
-.dtgraph-viewer__search-row[aria-selected='true'],
-.dtgraph-viewer__search-row:hover {
+.dtgraph-viewer__search-row[aria-selected='true'] {
   background: var(--dtgraph-viewer-panel-hover);
 }
 
@@ -201,16 +258,19 @@
   cursor: pointer;
 }
 
-.dtgraph-viewer__link:hover {
-  text-decoration: underline;
-}
-
 /* Legend */
 .dtgraph-viewer__legend {
-  left: 12px;
-  bottom: 12px;
-  max-width: min(260px, calc(100% - 24px));
+  left: var(--dtgraph-viewer-inset-left);
+  bottom: var(--dtgraph-viewer-inset-bottom);
+  max-width: min(
+    260px,
+    calc(100% - var(--dtgraph-viewer-inset-left) - var(--dtgraph-viewer-inset-right))
+  );
   padding: 4px 0;
+}
+
+.dtgraph-viewer__legend[open] {
+  z-index: 1;
 }
 
 .dtgraph-viewer__legend-title {
@@ -220,12 +280,14 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .dtgraph-viewer__legend-list {
-  max-height: 32vh;
+  max-height: min(38cqh, 19rem);
   margin: 0;
   padding: 0 4px 2px;
   list-style: none;
@@ -247,7 +309,6 @@
   cursor: pointer;
 }
 
-.dtgraph-viewer__legend-item:hover,
 .dtgraph-viewer__legend-item[aria-pressed='true'] {
   background: var(--dtgraph-viewer-panel-hover);
 }
@@ -271,12 +332,18 @@
 
 /* Detail panel */
 .dtgraph-viewer__panel {
-  top: 12px;
-  right: 12px;
-  bottom: 12px;
-  width: min(340px, calc(100% - 24px));
+  top: var(--dtgraph-viewer-inset-top);
+  right: var(--dtgraph-viewer-inset-right);
+  bottom: var(--dtgraph-viewer-inset-bottom);
+  width: min(
+    340px,
+    calc(100% - var(--dtgraph-viewer-inset-left) - var(--dtgraph-viewer-inset-right))
+  );
   padding: 14px 16px;
   overflow-y: auto;
+  /* Token values are the reason this panel exists — they have to be copyable. */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .dtgraph-viewer__panel[hidden] {
@@ -303,6 +370,8 @@
 
 .dtgraph-viewer__close {
   flex: none;
+  display: grid;
+  place-items: center;
   width: 26px;
   height: 26px;
   border: 0;
@@ -311,10 +380,6 @@
   background: none;
   font: 18px/1 var(--dtgraph-viewer-font);
   cursor: pointer;
-}
-
-.dtgraph-viewer__close:hover {
-  background: var(--dtgraph-viewer-panel-hover);
 }
 
 .dtgraph-viewer__chips {
@@ -385,10 +450,6 @@
   cursor: pointer;
 }
 
-.dtgraph-viewer__relation:hover {
-  background: var(--dtgraph-viewer-panel-hover);
-}
-
 .dtgraph-viewer__relation .dtgraph-viewer__path {
   flex: 1 1 auto;
   min-width: 0;
@@ -397,11 +458,183 @@
   white-space: nowrap;
 }
 
+/* --- Handing gestures between the page and the map (touch only; see ui/gate.ts) ------------- */
+
+.dtgraph-viewer__veil,
+.dtgraph-viewer__release {
+  display: none;
+}
+
+.dtgraph-viewer[data-gesture='page'] .dtgraph-viewer__veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: calc(var(--dtgraph-viewer-inset-bottom) + 2px);
+  /* The whole point: a drag that starts here belongs to the page. */
+  touch-action: auto;
+}
+
+.dtgraph-viewer[data-gesture='held'] {
+  --dtgraph-viewer-release-space: 3rem;
+}
+
+.dtgraph-viewer[data-gesture='held'] .dtgraph-viewer__release {
+  position: absolute;
+  left: 50%;
+  bottom: var(--dtgraph-viewer-inset-bottom);
+  display: inline-flex;
+  transform: translateX(-50%);
+}
+
+.dtgraph-viewer__pill {
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 1px solid var(--dtgraph-viewer-panel-line);
+  border-radius: 999px;
+  color: var(--dtgraph-viewer-panel-fg);
+  background: var(--dtgraph-viewer-panel-bg);
+  box-shadow: var(--dtgraph-viewer-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font: 600 12px/1 var(--dtgraph-viewer-font);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+/* --- Narrow container: the panel becomes a sheet and the legend moves out of its way --------- */
+
+@container dtgraph-viewer (max-width: 560px) {
+  /* Search keeps the full width minus the collapsed legend beside it. */
+  .dtgraph-viewer__search {
+    right: calc(var(--dtgraph-viewer-inset-right) + var(--dtgraph-viewer-legend-width) + 8px);
+    width: auto;
+  }
+
+  /* Bottom left belongs to the detail sheet now, so the legend pairs up with the search box. */
+  .dtgraph-viewer__legend {
+    top: var(--dtgraph-viewer-inset-top);
+    right: var(--dtgraph-viewer-inset-right);
+    bottom: auto;
+    left: auto;
+    max-width: min(15rem, 68cqw);
+  }
+
+  .dtgraph-viewer__legend:not([open]) {
+    width: var(--dtgraph-viewer-legend-width);
+  }
+
+  .dtgraph-viewer__legend[open] {
+    width: max-content;
+  }
+
+  .dtgraph-viewer__legend-list {
+    max-height: min(46cqh, 17rem);
+  }
+
+  /* A side rail would leave no map at all, so the details come up from the bottom instead. */
+  .dtgraph-viewer__panel {
+    top: auto;
+    left: var(--dtgraph-viewer-inset-left);
+    right: var(--dtgraph-viewer-inset-right);
+    bottom: calc(var(--dtgraph-viewer-inset-bottom) + var(--dtgraph-viewer-release-space));
+    width: auto;
+    max-height: min(62cqh, 26rem);
+    border-radius: 14px;
+  }
+}
+
+/* --- Touch: targets a finger can hit, and no affordance that needs a pointer ----------------- */
+
+@media (hover: hover) {
+  .dtgraph-viewer__search-row:hover,
+  .dtgraph-viewer__legend-item:hover,
+  .dtgraph-viewer__relation:hover,
+  .dtgraph-viewer__close:hover,
+  .dtgraph-viewer__pill:hover {
+    background: var(--dtgraph-viewer-panel-hover);
+  }
+
+  .dtgraph-viewer__pill:hover {
+    border-color: var(--dtgraph-viewer-accent);
+  }
+
+  .dtgraph-viewer__link:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Touch has no hover to preview with, so the press itself has to answer. */
+@media (hover: none) {
+  .dtgraph-viewer__search-row:active,
+  .dtgraph-viewer__legend-item:active,
+  .dtgraph-viewer__relation:active,
+  .dtgraph-viewer__close:active,
+  .dtgraph-viewer__pill:active {
+    background: var(--dtgraph-viewer-panel-hover);
+  }
+
+  /* There is no keyboard to press `/` on. */
+  .dtgraph-viewer__search-kbd {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .dtgraph-viewer__ui {
+    font-size: 14px;
+  }
+
+  /* 16px is not a taste call: iOS Safari zooms the whole page into any smaller field it focuses. */
+  .dtgraph-viewer__search-input {
+    padding: 13px 44px 13px 14px;
+    font-size: 16px;
+  }
+
+  .dtgraph-viewer__search-kbd {
+    top: 12px;
+  }
+
+  .dtgraph-viewer__search-row,
+  .dtgraph-viewer__search-empty,
+  .dtgraph-viewer__legend-item,
+  .dtgraph-viewer__relation {
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+
+  /* 44px without `display: flex`, which would take the disclosure marker with it. */
+  .dtgraph-viewer__legend-title {
+    padding: 14px;
+    line-height: 16px;
+  }
+
+  .dtgraph-viewer__close {
+    width: 44px;
+    height: 44px;
+    margin: -8px -8px 0 0;
+    font-size: 22px;
+  }
+
+  .dtgraph-viewer__pill {
+    min-height: 44px;
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+
+  .dtgraph-viewer[data-gesture='held'] {
+    --dtgraph-viewer-release-space: 4.25rem;
+  }
+}
+
 .dtgraph-viewer__search-input:focus-visible,
 .dtgraph-viewer__legend-item:focus-visible,
 .dtgraph-viewer__relation:focus-visible,
 .dtgraph-viewer__close:focus-visible,
-.dtgraph-viewer__link:focus-visible {
+.dtgraph-viewer__link:focus-visible,
+.dtgraph-viewer__pill:focus-visible {
   outline: 2px solid var(--dtgraph-viewer-accent);
   outline-offset: 1px;
 }

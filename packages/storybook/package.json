@@ -1,6 +1,6 @@
 {
   "name": "@dtgraph/storybook",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Storybook addon: view a story's DTCG token graph in a panel",
   "license": "MIT",
   "author": "Julien D\u00e9ramond",

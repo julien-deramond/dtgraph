@@ -27,6 +27,10 @@ export default defineConfig({
       og: { art: './src/brand/og-art.png' },
       docs: {
         tool: { version: `v${version}` },
+        tabs: [
+          { label: 'Playground', href: '/dtgraph/' },
+          { label: 'Docs', href: '/dtgraph/docs/' },
+        ],
         edit: { repo: 'julien-deramond/dtgraph', dir: 'apps/website' },
       },
     }),

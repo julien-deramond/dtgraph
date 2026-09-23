@@ -2,7 +2,7 @@
   "name": "website",
   "private": true,
   "version": "0.0.0",
-  "description": "dtgraph website: a DTCG token graph playground at / and docs at /docs, on one shared Astro layout",
+  "description": "dtgraph website: a DTCG token graph playground at / and docs at /docs, on @deramond.dev/astro",
   "license": "MIT",
   "type": "module",
   "scripts": {

@@ -9,13 +9,15 @@ const { version } = JSON.parse(
   readFileSync(new URL('../../packages/cli/package.json', import.meta.url), 'utf8'),
 );
 
+// Deployed to GitHub Pages as a project site (github.com/julien-deramond/dtgraph) rather than
+// a github.io user/org root, so it's served under a /dtgraph/ path — see #27 and
+// apps/website/README.md. Swap to a custom domain's root URL (and drop `base`) if one is
+// ever configured via a CNAME.
+const base = '/dtgraph';
+
 export default defineConfig({
-  // Deployed to GitHub Pages as a project site (github.com/julien-deramond/dtgraph) rather than
-  // a github.io user/org root, so it's served under a /dtgraph/ path — see #27 and
-  // apps/website/README.md. Swap to a custom domain's root URL (and drop `base`) if one is
-  // ever configured via a CNAME.
   site: 'https://julien-deramond.github.io',
-  base: '/dtgraph',
+  base,
   integrations: [
     mdx(),
     deramond({
@@ -28,8 +30,8 @@ export default defineConfig({
       docs: {
         tool: { version: `v${version}` },
         tabs: [
-          { label: 'Playground', href: '/dtgraph/' },
-          { label: 'Docs', href: '/dtgraph/docs/' },
+          { label: 'Playground', href: `${base}/` },
+          { label: 'Docs', href: `${base}/docs/` },
         ],
         edit: { repo: 'julien-deramond/dtgraph', dir: 'apps/website' },
       },

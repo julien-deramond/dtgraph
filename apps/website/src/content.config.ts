@@ -1,21 +1,16 @@
-import { glob } from 'astro/loaders';
+import { docsLoader, docsSchema } from '@deramond.dev/astro/docs';
 import { z } from 'astro/zod';
 import { defineCollection } from 'astro:content';
 
 /**
- * The docs: one Markdown/MDX file per page under src/content/docs, rendered by
- * src/pages/docs/[...slug].astro. `index.md` is the docs root (/docs/); any other file lands
- * at /docs/<its path without extension>/. Sidebar order and label come from frontmatter
- * (see src/lib/docs.ts).
+ * The docs: one Markdown/MDX file per page under src/content/docs, rendered by the docs route
+ * `@deramond.dev/astro` adds. `index.md` is the docs root (/docs/); any other file lands at
+ * /docs/<its path without extension>/. Sidebar order and label come from frontmatter (`order`,
+ * `label`). Every page has a description, used as its lead and meta description.
  */
 export const collections = {
   docs: defineCollection({
-    loader: glob({ base: './src/content/docs', pattern: '**/*.{md,mdx}' }),
-    schema: z.object({
-      title: z.string(),
-      description: z.string(),
-      order: z.number().int().nonnegative().optional(),
-      label: z.string().optional(),
-    }),
+    loader: docsLoader(),
+    schema: docsSchema({ extend: z.object({ description: z.string() }) }),
   }),
 };

@@ -13,6 +13,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@deramond.dev/storybook": "^0.1.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/storybook": "workspace:^",
     "@storybook/react-vite": "10.6.0",

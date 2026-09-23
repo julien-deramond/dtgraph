@@ -1,3 +1,9 @@
+<p align="center"><picture><source srcset=".github/header.svg" type="image/svg+xml"><img src=".github/header.png" width="830" alt="dtgraph: Aliasing, blast radius and cycles in DTCG design tokens."></picture></p>
+
+![npm](https://img.shields.io/npm/v/dtgraph?style=flat&label=npm&labelColor=16181E&color=3AB9BF)
+![licence](https://img.shields.io/github/license/julien-deramond/dtgraph?style=flat&labelColor=16181E&color=2D7579)
+![DTCG](https://img.shields.io/badge/DTCG-2025.10-3AB9BF?style=flat&labelColor=16181E)
+
 <h1 align="center">dtgraph</h1>
 
 <p align="center">

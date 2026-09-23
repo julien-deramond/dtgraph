@@ -1,0 +1,22 @@
+/*
+ * @dtgraph/viewer on the site's tokens. The viewer exposes every chrome color as a
+ * `--dtgraph-viewer-*` custom property; these map them onto @deramond.dev/tokens so the map, its
+ * search, legend and detail panel read as part of the page. The canvas itself runs on the
+ * viewer's own dark theme (`theme: 'dark'`), the only theme the site has.
+ *
+ * `[data-theme]` is there for specificity: the viewer declares its defaults on
+ * `.dtgraph-viewer`, and its stylesheet may be injected after this one.
+ */
+.dtgraph-viewer[data-theme] {
+  --dtgraph-viewer-bg: var(--color-bg);
+  --dtgraph-viewer-fg: var(--color-fg);
+  --dtgraph-viewer-font: var(--font-family-body);
+  --dtgraph-viewer-panel-bg: color-mix(in srgb, var(--color-panel) 92%, transparent);
+  --dtgraph-viewer-panel-fg: var(--color-fg);
+  --dtgraph-viewer-panel-muted: var(--color-muted);
+  --dtgraph-viewer-panel-line: var(--color-line);
+  --dtgraph-viewer-panel-hover: var(--color-tint);
+  --dtgraph-viewer-accent: var(--color-primary);
+  --dtgraph-viewer-code-bg: var(--color-bg);
+  --dtgraph-viewer-shadow: none;
+}

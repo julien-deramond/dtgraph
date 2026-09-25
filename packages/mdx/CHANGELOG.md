@@ -1,5 +1,18 @@
 # @dtgraph/mdx
 
+## 0.2.0
+
+### Minor Changes
+
+- [#132](https://github.com/julien-deramond/dtgraph/pull/132) [`f281fee`](https://github.com/julien-deramond/dtgraph/commit/f281fee18c4bedc938163c21e2e8ea16d53f5c4d) Thanks [@julien-deramond](https://github.com/julien-deramond)! - `<TokenGraph interactive>` takes your own canvas colors: `theme` accepts a `ThemeColors` object
+  from `@dtgraph/viewer` as well as `"auto"`, `"dark"` and `"light"`, passed through to the viewer.
+  Like a forced `"dark"` or `"light"`, it stops the map from following the site's theme.
+
+### Patch Changes
+
+- Updated dependencies [[`f281fee`](https://github.com/julien-deramond/dtgraph/commit/f281fee18c4bedc938163c21e2e8ea16d53f5c4d)]:
+  - @dtgraph/viewer@0.5.0
+
 ## 0.1.3
 
 ### Patch Changes

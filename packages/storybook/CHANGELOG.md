@@ -1,5 +1,19 @@
 # @dtgraph/storybook
 
+## 0.2.0
+
+### Minor Changes
+
+- [#134](https://github.com/julien-deramond/dtgraph/pull/134) [`546adef`](https://github.com/julien-deramond/dtgraph/commit/546adef9c4cce289b980076e0795186b0e569eff) Thanks [@julien-deramond](https://github.com/julien-deramond)! - The Token Graph panel takes a `theme` in the `dtgraph` parameter: `"dark"`, `"light"`, or your own
+  canvas colors (a `ThemeColors` from `@dtgraph/viewer`), passed through to the viewer. Without it
+  the map follows the manager's light/dark theme, as before. Set it once in `.storybook/preview` and
+  Storybook merges it with each story's `tokens`.
+
+### Patch Changes
+
+- Updated dependencies [[`f281fee`](https://github.com/julien-deramond/dtgraph/commit/f281fee18c4bedc938163c21e2e8ea16d53f5c4d)]:
+  - @dtgraph/viewer@0.5.0
+
 ## 0.1.3
 
 ### Patch Changes

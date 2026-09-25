@@ -13,7 +13,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@deramond.dev/storybook": "^0.1.0",
+    "@deramond.dev/storybook": "^0.1.1",
     "@deramond.dev/tokens": "^0.2.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/storybook": "workspace:^",

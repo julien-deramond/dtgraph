@@ -2,6 +2,7 @@
 import { Button, DocsLayout } from '@deramond.dev/astro';
 
 import { CSP_HEADER_VALUE } from '../lib/csp.js';
+import { SAMPLES } from '../samples/index.js';
 import '../styles/viewer.css';
 ---
 
@@ -21,7 +22,15 @@ import '../styles/viewer.css';
         <Button id="open-files" type="button" variant="gold" size="sm">Open files…</Button>
         <input id="file-input" type="file" accept="application/json,.json" multiple hidden />
         <Button id="paste-open" type="button" variant="quiet" size="sm">Paste JSON</Button>
-        <Button id="load-sample" type="button" variant="quiet" size="sm">Load sample</Button>
+        <div class="samples" role="group" aria-label="Load a sample">
+          {
+            SAMPLES.map((sample) => (
+              <Button type="button" variant="quiet" size="sm" data-sample={sample.id}>
+                {sample.label}
+              </Button>
+            ))
+          }
+        </div>
       </div>
       <div class="toolbar__status">
         <span id="file-chips" class="chips"></span>
@@ -103,7 +112,8 @@ import '../styles/viewer.css';
       border-bottom: var(--stroke-hairline) solid var(--color-line);
       font-size: var(--font-size-xs);
     }
-    .toolbar__group {
+    .toolbar__group,
+    .samples {
       display: flex;
       align-items: center;
       gap: var(--space-2);
@@ -374,7 +384,7 @@ import '../styles/viewer.css';
     import type { ColorBy, TokenGraphViewer } from '@dtgraph/viewer';
     import '@dtgraph/viewer/style.css';
 
-    import sample from '../samples/design-system.json';
+    import { GENERIC, SAMPLES } from '../samples/index.js';
     import { createPlayground, readFiles } from '../lib/playground.js';
     import type { PlaygroundModifier, PlaygroundResolver } from '../lib/playground.js';
 
@@ -591,9 +601,10 @@ import '../styles/viewer.css';
       fileInput.value = '';
     });
 
-    $('load-sample').addEventListener('click', () => {
-      load([{ source: 'design-system.json', content: JSON.stringify(sample) }]);
-    });
+    for (const button of document.querySelectorAll<HTMLButtonElement>('button[data-sample]')) {
+      const sample = SAMPLES.find(({ id }) => id === button.dataset.sample);
+      if (sample !== undefined) button.addEventListener('click', () => load(sample.files));
+    }
 
     $('paste-open').addEventListener('click', () => {
       pasteDialog.showModal();
@@ -653,6 +664,6 @@ import '../styles/viewer.css';
     });
 
     // --- Land with something on screen -------------------------------------------------------
-    load([{ source: 'design-system.json', content: JSON.stringify(sample) }]);
+    load(GENERIC.files);
   </script>
 </DocsLayout>

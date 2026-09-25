@@ -71,6 +71,7 @@ vi.mock('sigma/rendering', () => ({
 }));
 
 const { mountTokenGraphViewer } = await import('../src/mount.js');
+const { THEMES } = await import('../src/theme.js');
 
 function makeContainer(): HTMLElement {
   const container = document.createElement('div');
@@ -119,6 +120,25 @@ describe('mountTokenGraphViewer', () => {
     mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE), { theme: 'light' });
     expect(container.dataset.theme).toBe('light');
     expect(instances[0].settings.labelColor).toEqual({ color: '#18181b' });
+  });
+
+  it('paints the canvas and the export in a colors object', () => {
+    const container = makeContainer();
+    const theme = {
+      ...THEMES.dark,
+      background: '#101010',
+      label: '#eeeeee',
+      palette: ['#ff0000', '#00ff00'],
+    };
+    const viewer = mountTokenGraphViewer(container, tokenGraphFrom(SAMPLE), { theme });
+
+    expect(container.dataset.theme).toBe('custom');
+    expect(instances[0].settings.labelColor).toEqual({ color: '#eeeeee' });
+    const colors = new Set(viewer.graph.mapNodes((_, attributes) => attributes.color));
+    expect([...colors].every((color) => theme.palette.includes(color))).toBe(true);
+    const svg = viewer.toSvg();
+    expect(svg).toContain('fill="#101010"');
+    expect(svg).toContain('#ff0000');
   });
 
   it('fades non-neighbors while a node is hovered', () => {

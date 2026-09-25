@@ -10,6 +10,7 @@ import {
   renderTokenGraphToSvg,
 } from '@dtgraph/core';
 import type { NamedTokenTree } from '@dtgraph/core';
+import type { ThemeColors } from '@dtgraph/viewer';
 
 export interface Props {
   /** Inline DTCG JSON (already parsed), e.g. imported from a `.json` file. */
@@ -35,9 +36,11 @@ export interface Props {
   height?: string;
   /**
    * Interactive only: `"auto"` (default) follows `<html data-theme="…">` when the site sets it
-   * (Starlight does) and `prefers-color-scheme` otherwise, live; or force `"dark"`/`"light"`.
+   * (Starlight does) and `prefers-color-scheme` otherwise, live; force `"dark"`/`"light"`; or
+   * pass a full set of canvas colors (`ThemeColors` from `@dtgraph/viewer`) for a site's own
+   * palette and background.
    */
-  theme?: 'auto' | 'dark' | 'light';
+  theme?: 'auto' | 'dark' | 'light' | ThemeColors;
   /** Interactive only: color tokens by top-level group (default) or by `$type`. */
   colorBy?: 'group' | 'type';
   /** Interactive only: show the search box, legend and detail panel. Defaults to `true`. */
@@ -95,7 +98,7 @@ const payload = interactive
     <div
       class="dtgraph-mdx"
       data-dtgraph-interactive
-      data-dtgraph-theme={theme}
+      data-dtgraph-theme={typeof theme === 'object' ? JSON.stringify(theme) : theme}
       data-dtgraph-color-by={colorBy}
       data-dtgraph-chrome={String(chrome)}
       style={`height: ${height}`}
@@ -119,10 +122,16 @@ const payload = interactive
   import { buildTokenGraph } from '@dtgraph/core';
   import type { TokenEdge, TokenNode } from '@dtgraph/core';
   import { injectViewerStyles, mountTokenGraphViewer } from '@dtgraph/viewer';
-  import type { ColorBy, TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
+  import type { ColorBy, ThemeColors, TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
 
-  function resolveTheme(preference: string | undefined): ViewerTheme {
+  /** The theme the markup forces, if any: `"dark"`, `"light"` or a colors object. */
+  function forcedTheme(preference: string | undefined): ViewerTheme | ThemeColors | undefined {
     if (preference === 'dark' || preference === 'light') return preference;
+    if (preference?.startsWith('{')) return JSON.parse(preference) as ThemeColors;
+    return undefined;
+  }
+
+  function siteTheme(): ViewerTheme {
     const site = document.documentElement.dataset.theme;
     if (site === 'dark' || site === 'light') return site;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -136,14 +145,14 @@ const payload = interactive
       edges: TokenEdge[];
     };
     const graph = buildTokenGraph(nodes, edges);
-    const preference = container.dataset.dtgraphTheme;
+    const forced = forcedTheme(container.dataset.dtgraphTheme);
     const colorBy = (container.dataset.dtgraphColorBy ?? 'group') as ColorBy;
     const chrome = container.dataset.dtgraphChrome !== 'false';
 
     let viewer: TokenGraphViewer | undefined;
-    let current: ViewerTheme | undefined;
+    let current: ViewerTheme | ThemeColors | undefined;
     const mount = (): void => {
-      const theme = resolveTheme(preference);
+      const theme = forced ?? siteTheme();
       if (theme === current) return;
       viewer?.destroy();
       current = theme;
@@ -151,7 +160,7 @@ const payload = interactive
     };
     mount();
 
-    if (preference !== 'dark' && preference !== 'light') {
+    if (forced === undefined) {
       new MutationObserver(mount).observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['data-theme'],

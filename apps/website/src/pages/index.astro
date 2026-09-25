@@ -377,6 +377,7 @@ import '../styles/viewer.css';
     import sample from '../samples/design-system.json';
     import { createPlayground, readFiles } from '../lib/playground.js';
     import type { PlaygroundModifier, PlaygroundResolver } from '../lib/playground.js';
+    import { viewerTheme } from '../viewer-theme.js';
 
     const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
     const output = $<HTMLElement>('graph-output');
@@ -404,8 +405,8 @@ import '../styles/viewer.css';
     const playground = createPlayground({ output, error }, (container, graph) => {
       tokenOpen = false;
       const mounted = mountTokenGraphViewer(container, graph, {
-        // The site has one theme, dark, and the canvas matches it.
-        theme: 'dark',
+        // The site has one theme, dark, and the canvas is on its tokens too.
+        theme: viewerTheme,
         colorBy,
         onSelect: (token) => {
           tokenOpen = token !== undefined;

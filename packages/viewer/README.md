@@ -58,7 +58,7 @@ injectViewerStyles(); // idempotent; adds one <style id="dtgraph-viewer-styles">
 
 | Option     | Type                                   | Default   | Description                                                                              |
 | ---------- | -------------------------------------- | --------- | ---------------------------------------------------------------------------------------- |
-| `theme`    | `'dark' \| 'light'`                    | `'dark'`  | Canvas and overlay colors.                                                               |
+| `theme`    | `'dark' \| 'light'` or colors          | `'dark'`  | Canvas and overlay colors. See [Theming](#theming) for your own palette.                 |
 | `colorBy`  | `'group' \| 'type'`                    | `'group'` | Color tokens by top-level group (`color.*`, `button.*`, ...) or by DTCG `$type`.        |
 | `chrome`   | `boolean`                              | `true`    | Show the search box, legend and detail panel. `false` gives the bare map.               |
 | `layout`   | `{ iterations?, settings? }`           |           | ForceAtlas2 iteration count and setting overrides, for graphs above the small threshold. |
@@ -201,6 +201,24 @@ Overlay colors are CSS custom properties on `.dtgraph-viewer` (see `style.css`):
 `--dtgraph-viewer-legend-width` (what the collapsed legend takes in the narrow composition, and
 what the search box leaves clear for it). The canvas itself is painted from `THEMES` in
 `theme.ts`, exported for hosts that want to match it.
+
+The canvas is WebGL, so CSS can't reach it: pass your own colors as `theme` instead. It takes a
+whole `ThemeColors`, the same shape `toSvg()` accepts, so start from a built-in one and replace
+what you need — the categorical `palette` for the dots, `background`, `label`, `labelHalo`,
+`hoverRing`:
+
+```ts
+import { mountTokenGraphViewer, THEMES } from '@dtgraph/viewer';
+
+mountTokenGraphViewer(container, graph, {
+  theme: { ...THEMES.dark, background: '#0a0c11', palette: ['#3ab9bf', '#83acef', '#c78fef'] },
+});
+```
+
+Use hex colors: faded dots and edges are mixed toward `background` on the CPU, and only
+`#rrggbb` mixes. The container then carries `data-theme="custom"` and keeps the dark chrome
+defaults; retheme the chrome with the custom properties above. `toSvg()` exports in the same
+colors.
 
 The viewer also sets two attributes on the container that CSS and hosts can read:
 `data-full-bleed` (`"true"` when it covers the viewport) and `data-gesture`

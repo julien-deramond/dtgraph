@@ -23,7 +23,7 @@ import { collectFocus } from './focus.js';
 import { layoutViewerGraph, viewerExtent, type LayoutOptions } from './layout.js';
 import { createSigmaSettings } from './render.js';
 import { searchTokens } from './search.js';
-import { THEMES, type ViewerTheme } from './theme.js';
+import { THEMES, type ThemeColors, type ViewerTheme } from './theme.js';
 import { el } from './ui/dom.js';
 import { createActivationGate } from './ui/gate.js';
 import { createLegend, type LegendEntry } from './ui/legend.js';
@@ -31,8 +31,12 @@ import { createDetailPanel } from './ui/panel.js';
 import { createSearchBox } from './ui/search.js';
 
 export interface TokenGraphViewerOptions {
-  /** Defaults to `"dark"`. */
-  theme?: ViewerTheme;
+  /**
+   * `"dark"` (default), `"light"`, or a full set of canvas colors — a host's own palette and
+   * background, e.g. `{ ...THEMES.dark, palette: brandHues }`. A colors object keeps the dark
+   * chrome; retheme that through the `--dtgraph-viewer-*` custom properties.
+   */
+  theme?: ViewerTheme | ThemeColors;
   /** Defaults to `"group"`. */
   colorBy?: ColorBy;
   layout?: LayoutOptions;
@@ -88,8 +92,10 @@ export function mountTokenGraphViewer(
   tokenGraph: TokenGraph,
   options: TokenGraphViewerOptions = {},
 ): TokenGraphViewer {
-  const themeName = options.theme ?? 'dark';
-  const theme = THEMES[themeName];
+  const theme = typeof options.theme === 'object' ? options.theme : THEMES[options.theme ?? 'dark'];
+  // What `[data-theme]` tells the stylesheet: a colors object has no name, and gets the dark
+  // chrome defaults.
+  const themeName = typeof options.theme === 'object' ? 'custom' : (options.theme ?? 'dark');
 
   const graph = buildViewerGraph(tokenGraph, {
     colorBy: options.colorBy,
@@ -375,8 +381,7 @@ export function mountTokenGraphViewer(
     },
     // The live interaction state, so an export taken with a token selected is the picture on
     // screen rather than the map at rest. A caller who wants the map at rest overrides it.
-    toSvg: (svgOptions) =>
-      renderViewerGraphToSvg(graph, { theme: themeName, emphasis: state, ...svgOptions }),
+    toSvg: (svgOptions) => renderViewerGraphToSvg(graph, { theme, emphasis: state, ...svgOptions }),
     destroy: () => {
       document.removeEventListener('keydown', onKeydown);
       observer?.disconnect();

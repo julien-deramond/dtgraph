@@ -56,7 +56,10 @@ browser, as a JSON payload the component hydrates on load.
 ```
 
 The map follows your site's theme: `<html data-theme="dark|light">` when present (Starlight
-sets it), else `prefers-color-scheme`, live. Force one with `theme="dark"` or `theme="light"`.
+sets it), else `prefers-color-scheme`, live. Force one with `theme="dark"` or `theme="light"`,
+or pass your own canvas colors, a `ThemeColors` from `@dtgraph/viewer`:
+`theme={{ ...THEMES.dark, palette: ['#3ab9bf', '#83acef'] }}` (see the viewer's
+[Theming](https://github.com/julien-deramond/dtgraph/tree/main/packages/viewer#theming)).
 
 ## Props
 
@@ -67,7 +70,7 @@ sets it), else `prefers-color-scheme`, live. Force one with `theme="dark"` or `t
 | `files`       | `string[]`                    | Multiple file paths (see `file`) — aliases resolve across all of them, same as the `dtgraph` CLI's multi-file support. |
 | `interactive` | `boolean`                     | Render the interactive map instead of the static SVG. Defaults to `false`.                                              |
 | `height`      | `string`                      | Interactive only: CSS height of the map. Defaults to `"480px"`.                                                          |
-| `theme`       | `"auto" \| "dark" \| "light"` | Interactive only: follow the site (default), or force a theme.                                                          |
+| `theme`       | `"auto" \| "dark" \| "light"` or colors | Interactive only: follow the site (default), force a theme, or pass your own canvas colors (`ThemeColors`).         |
 | `colorBy`     | `"group" \| "type"`           | Interactive only: color tokens by top-level group (default) or by `$type`.                                              |
 | `chrome`      | `boolean`                     | Interactive only: show the search box, legend and detail panel. Defaults to `true`.                                     |
 

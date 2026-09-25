@@ -202,6 +202,9 @@ importers:
       '@deramond.dev/astro':
         specifier: ^0.5.1
         version: 0.5.1(astro@7.3.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.5.1)(yaml@2.9.1))
+      '@deramond.dev/tokens':
+        specifier: ^0.1.1
+        version: 0.1.1
       '@dtgraph/core':
         specifier: workspace:^
         version: link:../../packages/core

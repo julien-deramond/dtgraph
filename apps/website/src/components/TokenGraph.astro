@@ -1,18 +1,19 @@
 ---
 /**
- * `@dtgraph/mdx`'s `<TokenGraph>` as the docs embed it: always the dark theme (the site has no
- * other), on the site's tokens, in a hairline frame. Props pass through unchanged.
+ * `@dtgraph/mdx`'s `<TokenGraph>` as the docs embed it: on the site's tokens (chrome and canvas;
+ * the site has one theme, dark), in a hairline frame. Props pass through unchanged.
  */
 import TokenGraph from '@dtgraph/mdx/TokenGraph.astro';
 import type { ComponentProps } from 'astro/types';
 
 import '../styles/viewer.css';
+import { viewerTheme } from '../viewer-theme.js';
 
 type Props = ComponentProps<typeof TokenGraph>;
 ---
 
 <div class="token-graph">
-  <TokenGraph theme="dark" {...Astro.props} />
+  <TokenGraph theme={viewerTheme} {...Astro.props} />
 </div>
 
 <style>

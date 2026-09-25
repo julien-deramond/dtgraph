@@ -6,6 +6,7 @@ import {
   resolveAliasEdgesAcrossFiles,
 } from '@dtgraph/core';
 import type { NamedTokenTree, TokenGraph } from '@dtgraph/core';
+import type { ThemeColors, ViewerTheme } from '@dtgraph/viewer';
 
 /**
  * A story's `dtgraph` parameter: a single DTCG document (already-parsed JSON), or multiple —
@@ -14,6 +15,13 @@ import type { NamedTokenTree, TokenGraph } from '@dtgraph/core';
  */
 export interface DtgraphParameter {
   tokens: unknown | unknown[];
+  /**
+   * The map's theme: `"dark"`, `"light"`, or your own canvas colors (`ThemeColors` from
+   * `@dtgraph/viewer`). Defaults to following the manager's light/dark theme. Set it once in
+   * `.storybook/preview` and every story's graph gets it: Storybook merges it with each story's
+   * `tokens`.
+   */
+  theme?: ViewerTheme | ThemeColors;
 }
 
 /**

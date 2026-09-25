@@ -4,7 +4,7 @@ import { useTheme } from 'storybook/theming';
 
 import type { TokenGraph } from '@dtgraph/core';
 import { injectViewerStyles, mountTokenGraphViewer } from '@dtgraph/viewer';
-import type { TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
+import type { ThemeColors, TokenGraphViewer, ViewerTheme } from '@dtgraph/viewer';
 
 import { PARAM_KEY } from './constants.js';
 import { buildStoryTokenGraph, type DtgraphParameter } from './render-story-graph.js';
@@ -19,7 +19,7 @@ type GraphResult = { ok: true; graph: TokenGraph } | { ok: false; message: strin
 function useTokenGraphViewer(
   container: React.RefObject<HTMLDivElement | null>,
   graph: TokenGraph | undefined,
-  theme: ViewerTheme,
+  theme: ViewerTheme | ThemeColors,
 ): void {
   useEffect(() => {
     const element = container.current;
@@ -46,13 +46,16 @@ function useTokenGraphViewer(
 /**
  * The token graph panel: reads the active story's `dtgraph` parameter and renders it with
  * `@dtgraph/viewer`. Re-renders automatically when the active story changes, since
- * `useParameter` subscribes to Storybook's manager state; follows the manager's light/dark theme.
+ * `useParameter` subscribes to Storybook's manager state; follows the manager's light/dark theme
+ * unless the parameter sets its own.
  */
 export function Panel(): React.ReactElement {
   const parameter = useParameter<DtgraphParameter | undefined>(PARAM_KEY, undefined);
   // Storybook's converted theme carries `base: 'light' | 'dark'` (typed loosely here to avoid
   // depending on the theming package's type surface).
-  const theme: ViewerTheme = (useTheme() as { base?: string }).base === 'light' ? 'light' : 'dark';
+  const managerTheme: ViewerTheme =
+    (useTheme() as { base?: string }).base === 'light' ? 'light' : 'dark';
+  const theme = parameter?.theme ?? managerTheme;
   const container = useRef<HTMLDivElement>(null);
 
   const result = useMemo<GraphResult>(() => {

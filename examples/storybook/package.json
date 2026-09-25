@@ -14,8 +14,10 @@
   },
   "devDependencies": {
     "@deramond.dev/storybook": "^0.1.0",
+    "@deramond.dev/tokens": "^0.1.1",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/storybook": "workspace:^",
+    "@dtgraph/viewer": "workspace:^",
     "@storybook/react-vite": "10.6.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

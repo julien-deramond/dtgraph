@@ -58,6 +58,23 @@ parameters: {
 }
 ```
 
+The map follows the manager's light/dark theme. To force one, or to paint it in your own colors
+(a `ThemeColors` from [`@dtgraph/viewer`](../viewer#theming)), set `theme` once in
+`.storybook/preview`; Storybook merges it with each story's `tokens`:
+
+```ts
+import { THEMES } from '@dtgraph/viewer';
+
+export default {
+  parameters: {
+    dtgraph: { theme: { ...THEMES.dark, palette: ['#3ab9bf', '#83acef', '#c78fef'] } },
+  },
+};
+```
+
+The panel's search box, legend and detail panel are themed with the viewer's
+`--dtgraph-viewer-*` custom properties, which a `managerHead` style can set.
+
 There's no `file`/`files` option (unlike [`<TokenGraph>`](../mdx#readme)): the panel runs in
 Storybook's manager UI, a browser context with no filesystem access, so tokens must already be
 in-memory JS values — typically imported from a `.json` file at the top of your stories file:

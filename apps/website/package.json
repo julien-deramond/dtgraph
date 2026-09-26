@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@astrojs/mdx": "8.0.1",
-    "@deramond.dev/astro": "^0.6.1",
+    "@deramond.dev/astro": "^0.7.0",
     "@deramond.dev/tokens": "^0.2.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/mdx": "workspace:^",

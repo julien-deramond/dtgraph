@@ -30,7 +30,7 @@
 
 <p align="center">
   <a href="https://julien-deramond.github.io/dtgraph/">
-    <img src="media/playground.png" alt="The dtgraph playground: a design token graph clustered by group, with primitives sized by how many tokens depend on them" width="100%">
+    <img src="media/playground.gif" alt="The dtgraph playground: a design token graph clustered by group. Hovering a primitive spotlights the tokens that depend on it, clicking it opens its details with what uses it, and following a related token moves the focus there" width="100%">
   </a>
 </p>
 

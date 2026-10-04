@@ -61,31 +61,10 @@ incomplete, the same as one without a description.
 | `documentation` | Docs-only or repo-governance change | PRs | anyone, at creation time |
 | `upstream-drift` | dtgraph's behavior has drifted from the DTCG spec or a reference tool it tracks (e.g. `@udt/dtcg-parser`, `tokenc`) | issues, PRs | anyone, at creation time |
 | `ai-submitted` | Opened by an AI agent rather than a human | issues, PRs | the agent, at creation time |
-| `needs-triage` | No maintainer has read this yet — nobody should start work on it | issues only | applied automatically by every issue template |
-| `ready-to-dev` | Triaged and specified well enough to be picked up | issues only | a maintainer, after triage |
 
 Label colors follow the same system as
 [julien-deramond/bootstrap-tokens](https://github.com/julien-deramond/bootstrap-tokens/labels)
 for consistency across repos.
-
-## Issue lifecycle
-
-```
-new issue (needs-triage + type label, + ai-submitted if agent-authored)
-        │
-        ▼
-  maintainer triages: clarifies scope, checks it's specced well enough to build
-        │
-        ▼
-  needs-triage removed, ready-to-dev added
-        │
-        ▼
-     picked up for implementation (branch + PR, see above)
-```
-
-Nobody — human or agent — should start implementation work on an issue that's still
-labeled `needs-triage`. It hasn't been confirmed as in-scope or specified precisely
-enough yet.
 
 ## Workflow for AI agents
 
@@ -100,11 +79,7 @@ down explicitly rather than assumed:
   expected behavior, edge cases, and any relevant DTCG spec references — not just a
   one-line note.
 - **Labeling.** The agent adds the `ai-submitted` label in addition to whatever the
-  template already applies (`needs-triage` + `bug`/`feature`/`enhancement`).
-- **Picking up work.** When asked to "take an available issue" (or similar), an agent
-  must only pick up issues labeled `ready-to-dev`. Issues still labeled `needs-triage`
-  are off-limits until a human maintainer re-labels them — that label change is the
-  signal that the issue is scoped and approved for work.
+  template already applies (`bug`/`feature`/`enhancement`).
 - **Implementing.** Follow the same development workflow as anyone else: a branch per
   issue, a PR that follows the PR template, and a description detailed and
   human-readable enough for a maintainer to review without extra context-gathering.

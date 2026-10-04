@@ -3,7 +3,6 @@ description: Propose a new capability that doesn't exist in dtgraph yet.
 title: "[Feature]: "
 labels:
   - feature
-  - needs-triage
 body:
   - type: textarea
     id: problem

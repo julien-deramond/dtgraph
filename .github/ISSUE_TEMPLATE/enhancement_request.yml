@@ -3,7 +3,6 @@ description: Improve something that already exists in dtgraph (not a new capabil
 title: "[Enhancement]: "
 labels:
   - enhancement
-  - needs-triage
 body:
   - type: textarea
     id: current-behavior

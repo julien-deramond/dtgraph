@@ -3,7 +3,6 @@ description: Something in dtgraph isn't working as expected.
 title: "[Bug]: "
 labels:
   - bug
-  - needs-triage
 body:
   - type: textarea
     id: what-happened

@@ -1,0 +1,210 @@
+---
+/*
+ * Column view prototype for #139: tokens in tier columns, connectors on focus. Throwaway, not
+ * linked from the site; it exists to answer the study's questions on real token sets.
+ */
+import { Button, DocsLayout } from '@deramond.dev/astro';
+
+import { CSP_HEADER_VALUE } from '../lib/csp.js';
+import '../styles/columns.css';
+---
+
+<DocsLayout title="Columns prototype" wide>
+  <meta slot="head" http-equiv="Content-Security-Policy" content={CSP_HEADER_VALUE} />
+  <meta slot="head" name="robots" content="noindex" />
+  <div class="columns-page">
+    <h1 class="d-visually-hidden">Token columns prototype</h1>
+    <div class="toolbar" role="group" aria-label="Prototype controls">
+      <div class="toolbar__group">
+        <Button id="load-sample" type="button" variant="quiet" size="sm">Sample</Button>
+        <Button id="load-large" type="button" variant="quiet" size="sm">Large set</Button>
+        <Button id="open-files" type="button" variant="quiet" size="sm">Open files…</Button>
+        <Button id="open-folder" type="button" variant="quiet" size="sm">Open folder…</Button>
+        <input id="file-input" type="file" accept="application/json,.json" multiple hidden />
+        <input id="folder-input" type="file" multiple hidden />
+      </div>
+      <label class="field">
+        Columns
+        <select id="strategy">
+          <option value="group-role" selected>Group role (3 tiers)</option>
+          <option value="depth">Alias depth</option>
+          <option value="source">Source folder / file</option>
+        </select>
+      </label>
+      <label class="field">
+        Links
+        <select id="chain">
+          <option value="hop" selected>One hop</option>
+          <option value="chain">Full chain</option>
+        </select>
+      </label>
+      <label class="field">
+        <input id="autoscroll" type="checkbox" checked />
+        Scroll to related
+      </label>
+      <label class="field">
+        Kind
+        <select id="kind">
+          <option value="all" selected>All</option>
+          <option value="color">Color</option>
+          <option value="dimension">Dimension</option>
+          <option value="typography">Type</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="d-visually-hidden">Filter tokens</span>
+        <input id="search" type="search" placeholder="Filter tokens…" autocomplete="off" />
+      </label>
+      <span id="stats" class="stats"></span>
+    </div>
+    <p id="error-output" class="error" role="alert" hidden></p>
+    <div id="columns-output" class="stage"></div>
+  </div>
+
+  <style>
+    .columns-page {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - var(--layout-docs-top) - 2rem);
+      min-height: 28rem;
+      background: var(--color-bg);
+      color: var(--color-fg);
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-2) var(--space-4);
+      padding: var(--space-3) var(--space-5);
+      border-bottom: var(--stroke-hairline) solid var(--color-line);
+      font-size: var(--font-size-xs);
+    }
+    .toolbar__group {
+      display: flex;
+      gap: var(--space-2);
+    }
+    .field {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      color: var(--color-muted);
+      white-space: nowrap;
+    }
+    .field select,
+    .field input[type='search'] {
+      padding: 2px var(--space-1);
+      border: var(--stroke-hairline) solid var(--color-line);
+      border-radius: var(--radius-sm);
+      color: var(--color-fg);
+      background: var(--color-panel);
+      font: inherit;
+    }
+    .stats {
+      margin-left: auto;
+      color: var(--color-muted);
+      font: var(--type-mono);
+      font-size: var(--font-size-xs);
+      font-variant-numeric: tabular-nums;
+    }
+    .error {
+      margin: 0;
+      padding: var(--space-3) var(--space-5);
+      color: var(--color-danger);
+      white-space: pre-wrap;
+    }
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+  </style>
+
+  <script>
+    import { createPlayground, readFiles } from '../lib/playground.js';
+    import type { PlaygroundFileInput } from '../lib/playground.js';
+    import { mountColumns } from '../lib/columns/mount.js';
+    import type { ColumnsView, KindFilter } from '../lib/columns/mount.js';
+    import { sourcesByPath } from '../lib/columns/sources.js';
+    import { syntheticTokenSet } from '../lib/columns/synthetic.js';
+    import type { TierStrategy } from '../lib/columns/tiers.js';
+    import sample from '../samples/design-system.json';
+
+    const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
+    const output = $<HTMLElement>('columns-output');
+    const error = $<HTMLElement>('error-output');
+    const stats = $<HTMLElement>('stats');
+    const strategy = $<HTMLSelectElement>('strategy');
+    const chain = $<HTMLSelectElement>('chain');
+    const autoscroll = $<HTMLInputElement>('autoscroll');
+    const kind = $<HTMLSelectElement>('kind');
+    const search = $<HTMLInputElement>('search');
+    const fileInput = $<HTMLInputElement>('file-input');
+    const folderInput = $<HTMLInputElement>('folder-input');
+    // Not in Astro's attribute types; every current browser supports it.
+    folderInput.webkitdirectory = true;
+
+    let view: ColumnsView | undefined;
+    let sources = new Map<string, string>();
+
+    const playground = createPlayground({ output, error }, (container, graph) => {
+      const mounted = mountColumns(container, graph, {
+        strategy: strategy.value as TierStrategy,
+        fullChain: chain.value === 'chain',
+        autoScroll: autoscroll.checked,
+        sourceOf: (node) => node.source ?? sources.get(node.path.join('.')),
+      });
+      mounted.setFilter(search.value, kind.value as KindFilter);
+      view = mounted;
+      const format = new Intl.NumberFormat();
+      stats.textContent = `${format.format(graph.nodes.length)} tokens · ${format.format(graph.edges.length)} edges · DOM built in ${Math.round(mounted.renderMs)} ms`;
+      return {
+        destroy() {
+          mounted.destroy();
+          if (view === mounted) view = undefined;
+        },
+      };
+    });
+
+    function load(files: PlaygroundFileInput[]): void {
+      sources = sourcesByPath(files);
+      playground.load(files);
+    }
+
+    $('load-sample').addEventListener('click', () =>
+      load([{ source: 'design-system.json', content: JSON.stringify(sample) }]),
+    );
+    $('load-large').addEventListener('click', () =>
+      load([{ source: 'large.json', content: JSON.stringify(syntheticTokenSet()) }]),
+    );
+    $('open-files').addEventListener('click', () => fileInput.click());
+    $('open-folder').addEventListener('click', () => folderInput.click());
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files === null || fileInput.files.length === 0) return;
+      load(await readFiles(fileInput.files));
+      fileInput.value = '';
+    });
+    // A folder keeps each file's relative path (minus the folder itself) as its source, so
+    // `primitive/color.json` and `component/btn.json` can become columns.
+    folderInput.addEventListener('change', async () => {
+      const picked = Array.from(folderInput.files ?? []).filter((file) => file.name.endsWith('.json'));
+      if (picked.length === 0) return;
+      load(
+        await Promise.all(
+          picked.map(async (file) => ({
+            source: file.webkitRelativePath.split('/').slice(1).join('/') || file.name,
+            content: await file.text(),
+          })),
+        ),
+      );
+      folderInput.value = '';
+    });
+
+    strategy.addEventListener('change', () => playground.remount());
+    chain.addEventListener('change', () => view?.setFullChain(chain.value === 'chain'));
+    autoscroll.addEventListener('change', () => view?.setAutoScroll(autoscroll.checked));
+    kind.addEventListener('change', () => view?.setFilter(search.value, kind.value as KindFilter));
+    search.addEventListener('input', () => view?.setFilter(search.value, kind.value as KindFilter));
+
+    load([{ source: 'design-system.json', content: JSON.stringify(sample) }]);
+  </script>
+</DocsLayout>

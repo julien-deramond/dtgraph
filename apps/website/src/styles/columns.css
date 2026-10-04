@@ -1,0 +1,207 @@
+/*
+ * Column view prototype (#139), on the site's tokens. Everything here is built at runtime by
+ * src/lib/columns/mount.ts, so it lives in a global stylesheet rather than the page's scoped one.
+ */
+.dtcols {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: var(--color-fg);
+  font-size: var(--font-size-xs);
+}
+.dtcols__columns {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(14rem, 1fr);
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-5) 0;
+  overflow-x: auto;
+}
+.dtcols__column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.dtcols__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--stroke-hairline) solid var(--color-line);
+}
+.dtcols__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.dtcols__badge {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  color: var(--color-muted);
+  background: var(--color-panel);
+  font: var(--type-mono);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.dtcols__body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.dtcols__list {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0 0 var(--space-6);
+  overflow-y: auto;
+  list-style: none;
+}
+.dtcols__family {
+  /* Offscreen families skip rendering; mount.ts sets contain-intrinsic-size per family. */
+  content-visibility: auto;
+}
+.dtcols__family-title {
+  height: 26px;
+  margin: 0;
+  padding-top: var(--space-2);
+  box-sizing: border-box;
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dtcols__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dtcols__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: var(--stroke-hairline) solid transparent;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  background: transparent;
+  font: var(--type-mono);
+  font-size: var(--font-size-xs);
+  text-align: left;
+  cursor: pointer;
+}
+.dtcols__row:hover {
+  background: var(--color-tint);
+}
+.dtcols__row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.dtcols--focused .dtcols__row:not([data-rel]) {
+  opacity: 0.5;
+}
+.dtcols__row[data-rel='self'] {
+  border-color: var(--color-primary);
+  background: var(--color-tint);
+  color: var(--color-primary);
+}
+.dtcols__row[data-rel='upstream'],
+.dtcols__row[data-rel='downstream'] {
+  border-color: var(--color-line);
+  background: var(--color-panel);
+}
+.dtcols__swatch {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: var(--stroke-hairline) solid var(--color-line);
+  border-radius: 3px;
+}
+.dtcols__type {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  color: var(--color-muted);
+  font-size: 10px;
+  text-align: center;
+}
+.dtcols__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dtcols__value {
+  flex: 0 1 auto;
+  max-width: 45%;
+  overflow: hidden;
+  color: var(--color-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dtcols__more {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 0 var(--space-2);
+  border: var(--stroke-hairline) solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  background: var(--color-panel);
+  font: var(--type-mono);
+  font-size: 10px;
+  cursor: pointer;
+}
+.dtcols__more[hidden] {
+  display: none;
+}
+.dtcols__more--above {
+  top: var(--space-1);
+}
+.dtcols__more--below {
+  bottom: var(--space-1);
+}
+.dtcols__links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+.dtcols__link {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.5;
+}
+.dtcols__link--member {
+  stroke-dasharray: 4 3;
+}
+.dtcols__link--skip {
+  stroke: var(--color-illustration-gold);
+}
+.dtcols__link--clipped {
+  opacity: 0.45;
+}
+.dtcols__member {
+  fill: var(--color-muted);
+  font: var(--type-mono);
+  font-size: 10px;
+}
+.dtcols__detail {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  min-height: 2.5rem;
+  border-top: var(--stroke-hairline) solid var(--color-line);
+  color: var(--color-muted);
+  font: var(--type-mono);
+  font-size: var(--font-size-xs);
+}

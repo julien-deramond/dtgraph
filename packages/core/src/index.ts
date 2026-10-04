@@ -1,6 +1,8 @@
 export { DtcgParseError, MissingResolverContextsError } from './errors.js';
 export type { ResolverModifierChoice } from './errors.js';
 export { buildTokenGraph } from './graph.js';
+export { renderTokenGraphToMermaid } from './mermaid.js';
+export type { RenderTokenGraphToMermaidOptions } from './mermaid.js';
 export { flattenTokenTree, parseTokenTree } from './parse.js';
 export { renderTokenGraphToSvg } from './render.js';
 export type { RenderTokenGraphOptions } from './render.js';

@@ -62,6 +62,96 @@ describe('dtgraph render (end-to-end)', () => {
   });
 });
 
+describe('dtgraph render --format mermaid (end-to-end)', () => {
+  async function writeTokens(): Promise<string> {
+    const inputFile = join(dir, 'tokens.json');
+    await writeFile(
+      inputFile,
+      JSON.stringify({
+        color: {
+          brand: { $type: 'color', $value: '#112233' },
+          accent: { $value: '{color.brand}' },
+        },
+      }),
+    );
+    return inputFile;
+  }
+
+  it('writes Mermaid text to the file given via -o', async () => {
+    const inputFile = await writeTokens();
+    const outputFile = join(dir, 'graph.mmd');
+
+    await createProgram().parseAsync([
+      'node',
+      'dtgraph',
+      'render',
+      inputFile,
+      '--format',
+      'mermaid',
+      '-o',
+      outputFile,
+    ]);
+
+    const mermaid = await readFile(outputFile, 'utf8');
+    expect(mermaid.startsWith('flowchart LR\n')).toBe(true);
+    expect(mermaid).toMatch(/t_color_accent_\w+ --> t_color_brand_\w+/);
+  });
+
+  it('writes a fenced block with full paths to stdout', async () => {
+    const inputFile = await writeTokens();
+
+    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    try {
+      await createProgram().parseAsync([
+        'node',
+        'dtgraph',
+        'render',
+        inputFile,
+        '--format',
+        'mermaid',
+        '--fence',
+        '--full-paths',
+      ]);
+      const written = writeSpy.mock.calls.map(([chunk]) => String(chunk)).join('');
+      expect(written.startsWith('```mermaid\nflowchart LR\n')).toBe(true);
+      expect(written.endsWith('\n```\n')).toBe(true);
+      expect(written).toContain('["color.brand"]');
+    } finally {
+      writeSpy.mockRestore();
+    }
+  });
+
+  it('rejects the Mermaid-only flags with the default SVG format', async () => {
+    const inputFile = await writeTokens();
+
+    await expect(
+      createProgram().parseAsync(['node', 'dtgraph', 'render', inputFile, '--fence']),
+    ).rejects.toThrow('--fence only applies with --format mermaid');
+    await expect(
+      createProgram().parseAsync([
+        'node',
+        'dtgraph',
+        'render',
+        inputFile,
+        '--fence',
+        '--full-paths',
+      ]),
+    ).rejects.toThrow('--fence and --full-paths only apply with --format mermaid');
+  });
+
+  it('rejects an unknown format', async () => {
+    const inputFile = await writeTokens();
+    const program = createProgram().exitOverride();
+    for (const command of program.commands) {
+      command.exitOverride().configureOutput({ writeErr: () => undefined });
+    }
+
+    await expect(
+      program.parseAsync(['node', 'dtgraph', 'render', inputFile, '--format', 'dot']),
+    ).rejects.toThrow(/Allowed choices are svg, mermaid/);
+  });
+});
+
 describe('dtgraph validate (end-to-end)', () => {
   it('prints a human-readable summary and exits 0 for valid file(s)', async () => {
     const inputFile = join(dir, 'tokens.json');

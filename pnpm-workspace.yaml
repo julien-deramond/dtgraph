@@ -6,6 +6,7 @@ packages:
   - 'examples/*'
 allowBuilds:
   esbuild: true
+  ffmpeg-static: true
 overrides:
   '@astrojs/compiler-rs': 0.4.0
 minimumReleaseAgeExclude:

@@ -27,6 +27,23 @@ changes, and get code reviewed — for both human and AI-agent contributors.
    was opened by an agent. Labels aren't optional decoration — filtering PRs by label
    is how reviewers and future contributors find related work.
 
+## Re-recording the README demo
+
+The animated hero in the README (`media/playground.gif`) is recorded by a script, not by hand,
+so it can be regenerated whenever the playground's look changes. Install the browser once, then
+run the demo:
+
+```sh
+pnpm exec playwright install chromium
+pnpm run demo
+```
+
+It builds the packages and the website, drives the playground with Playwright, and writes
+`media/playground.gif` (kept under 2 MB). Pass `--skip-build` (`pnpm run demo --skip-build`)
+to reuse an existing build. The nodes it hovers and clicks sit at fixed positions of the bundled
+sample: if the sample or the layout changes, look at the result and update the coordinates at the
+top of `scripts/record-demo.mjs`.
+
 ## Release process
 
 Publishable packages (`dtgraph`, `@dtgraph/core`, `@dtgraph/mdx`, `@dtgraph/storybook`,

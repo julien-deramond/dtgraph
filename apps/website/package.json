@@ -13,19 +13,19 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@astrojs/mdx": "8.0.1",
+    "@astrojs/mdx": "8.0.2",
     "@deramond.dev/astro": "^0.10.0",
     "@deramond.dev/tokens": "^0.3.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/mdx": "workspace:^",
     "@dtgraph/viewer": "workspace:^",
-    "astro": "7.3.3"
+    "astro": "7.3.5"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
-    "jsdom": "30.1.0",
+    "jsdom": "30.1.1",
     "typescript": "6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.2"
   },
   "engines": {
     "node": ">=20"

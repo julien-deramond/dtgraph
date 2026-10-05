@@ -39,8 +39,8 @@
     "astro": ">=5.0.0"
   },
   "devDependencies": {
-    "astro": "7.3.3",
-    "vitest": "5.0.1"
+    "astro": "7.3.5",
+    "vitest": "5.0.2"
   },
   "engines": {
     "node": ">=20"

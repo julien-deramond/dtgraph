@@ -25,7 +25,6 @@
 <p align="center">
   <a href="https://github.com/julien-deramond/dtgraph/actions/workflows/ci.yml"><img src="https://github.com/julien-deramond/dtgraph/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="https://julien-deramond.github.io/dtgraph/"><img src="https://img.shields.io/badge/playground-live-1d4ed8.svg" alt="Playground, live"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -81,4 +80,4 @@ issues. To report a bug or request a feature, [open an issue](https://github.com
 
 ## License
 
-[MIT](LICENSE)
+Code: [MIT](LICENSE). The brand files (the mark and the artwork, including the header image) are all rights reserved.

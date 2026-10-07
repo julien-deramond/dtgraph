@@ -45,7 +45,9 @@ export default defineConfig({
           href: 'https://julien-deramond.github.io/bootstrap-tokens/',
         },
       ],
-      og: { art: './src/brand/og-art.png' },
+      // The site card (/og/index.png) prints its subtitle on one line, cut with an ellipsis:
+      // the site description doesn't fit, so the card gets a shorter line.
+      og: { art: './src/brand/og-art.png', subtitle: 'Dependency graphs for DTCG design tokens' },
       docs: {
         tool: { version: `v${version}` },
         tabs: [

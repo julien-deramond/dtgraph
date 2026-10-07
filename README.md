@@ -1,30 +1,26 @@
-<p align="center"><picture><source srcset=".github/header.svg" type="image/svg+xml"><img src=".github/header.png" width="830" alt="dtgraph: Aliasing, blast radius and cycles in DTCG design tokens."></picture></p>
-
-![npm](https://img.shields.io/npm/v/dtgraph?style=flat&label=npm&labelColor=16181E&color=3AB9BF)
-![licence](https://img.shields.io/github/license/julien-deramond/dtgraph?style=flat&labelColor=16181E&color=2D7579)
-![DTCG](https://img.shields.io/badge/DTCG-2025.10-3AB9BF?style=flat&labelColor=16181E)
-
-<h1 align="center">dtgraph</h1>
+<h1 align="center"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/logo-title-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/logo-title-light.svg"><img src=".github/logo-title-light.png" width="299" alt="dtgraph"></picture></h1>
 
 <p align="center">
   dtgraph turns <a href="https://tr.designtokens.org/">DTCG</a> design token files into an
   interactive dependency graph.
-  <br>
-  <a href="https://julien-deramond.github.io/dtgraph/"><strong>Open the playground »</strong></a>
-  <br>
-  <br>
+</p>
+
+<p align="center"><a href="https://julien-deramond.github.io/dtgraph/"><strong>Open the playground »</strong></a></p>
+
+<p align="center">
   <a href="#try-it">Try it</a>
   ·
   <a href="#packages">Packages</a>
   ·
   <a href="#documentation">Documentation</a>
   ·
-  <a href="https://github.com/julien-deramond/dtgraph/issues/new/choose">Report bug</a>
+  <a href="https://github.com/julien-deramond/dtgraph/issues/new/choose">Report a bug</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/julien-deramond/dtgraph/actions/workflows/ci.yml"><img src="https://github.com/julien-deramond/dtgraph/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
-  <a href="https://julien-deramond.github.io/dtgraph/"><img src="https://img.shields.io/badge/playground-live-1d4ed8.svg" alt="Playground, live"></a>
+  <a href="https://www.npmjs.com/package/dtgraph"><img src="https://img.shields.io/npm/v/dtgraph?style=flat&label=npm&labelColor=16181E&color=3AB9BF" alt="npm: dtgraph"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/julien-deramond/dtgraph?style=flat&labelColor=16181E&color=2D7579" alt="Licence: MIT"></a>
+  <a href="https://tr.designtokens.org/"><img src="https://img.shields.io/badge/DTCG-2025.10-3AB9BF?style=flat&labelColor=16181E" alt="DTCG 2025.10"></a>
 </p>
 
 <p align="center">

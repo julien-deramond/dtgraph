@@ -1,5 +1,14 @@
 # @dtgraph/viewer
 
+## 0.5.1
+
+### Patch Changes
+
+- [#156](https://github.com/julien-deramond/dtgraph/pull/156) [`a39539b`](https://github.com/julien-deramond/dtgraph/commit/a39539b444d049c7c94cbffd9ab00cb674401e06) Thanks [@julien-deramond](https://github.com/julien-deramond)! - Never let a color token's value load a resource. The detail panel's swatch and the legend dots set
+  `backgroundColor` instead of the `background` shorthand, and `swatchColor` now refuses `url(...)`,
+  `image-set(...)`, `var(...)` and backslash escapes, so a token file you did not write can no longer
+  make the viewer request an image from another host.
+
 ## 0.5.0
 
 ### Minor Changes

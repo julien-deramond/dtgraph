@@ -35,15 +35,28 @@ export function resolveValue(graph: TokenGraph, path: string[]): ResolvedValue {
 }
 
 /**
+ * CSS functions and escapes that can load a resource or hide one: a color token value must not be
+ * able to make the browser fetch anything. `url(`, `image-set(` and `var(` are refused whatever
+ * the case or spacing, and so is a backslash escape (`u\72l(`).
+ */
+const UNSAFE_COLOR = /\\|\b(?:url|image-set|-webkit-image-set|image|var|attr|env|src)\s*\(/i;
+
+function safeColor(value: string): string | undefined {
+  return UNSAFE_COLOR.test(value) ? undefined : value;
+}
+
+/**
  * A CSS color string for a resolved color value, if there is one to show: a plain string
- * (`"#3311ff"`, `"rebeccapurple"`), or a DTCG color object carrying a `hex` fallback.
+ * (`"#3311ff"`, `"rebeccapurple"`), or a DTCG color object carrying a `hex` fallback. A value that
+ * could load a resource (`url(...)`, `image-set(...)`) is never a color to show.
  */
 export function swatchColor(type: string | undefined, value: unknown): string | undefined {
   if (type !== 'color') return undefined;
-  if (typeof value === 'string' && value.length <= 64 && !value.includes('{')) return value;
+  if (typeof value === 'string' && value.length <= 64 && !value.includes('{'))
+    return safeColor(value);
   if (typeof value === 'object' && value !== null && 'hex' in value) {
     const hex = (value as { hex?: unknown }).hex;
-    if (typeof hex === 'string') return hex;
+    if (typeof hex === 'string') return safeColor(hex);
   }
   return undefined;
 }

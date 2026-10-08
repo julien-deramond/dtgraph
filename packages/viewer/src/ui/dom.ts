@@ -20,7 +20,7 @@ export function button(className: string, text: string, onClick: () => void): HT
 /** A colored dot, for legends and result rows. */
 export function dot(color: string): HTMLSpanElement {
   const element = el('span', 'dtgraph-viewer__dot');
-  element.style.background = color;
+  element.style.backgroundColor = color;
   return element;
 }
 

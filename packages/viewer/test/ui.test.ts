@@ -101,7 +101,24 @@ describe('detail panel', () => {
     expect(text).toContain('color.blue');
     expect(text).toContain('Depends on (1)');
     const swatch = panel.element.querySelector<HTMLElement>('.dtgraph-viewer__swatch');
-    expect(swatch?.style.background).toBe('rgb(59, 130, 246)');
+    expect(swatch?.style.backgroundColor).toBe('rgb(59, 130, 246)');
+  });
+
+  it('never turns a color token value into a CSS url()', () => {
+    const hostile = tokenGraphFrom({
+      evil: { $type: 'color', $value: 'url(https://host.invalid/x.png)' },
+    });
+    const hostileGraph = buildViewerGraph(hostile);
+    const panel = createDetailPanel({
+      graph: hostileGraph,
+      tokenGraph: hostile,
+      onNavigate: vi.fn(),
+      onClose: vi.fn(),
+    });
+    document.body.appendChild(panel.element);
+    panel.show('evil');
+    expect(panel.element.querySelector('.dtgraph-viewer__swatch')).toBeNull();
+    expect(panel.element.innerHTML).not.toMatch(/background-image/i);
   });
 
   it('lists direct and indirect dependents and composite member names', () => {

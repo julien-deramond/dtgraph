@@ -90,7 +90,7 @@ export function createDetailPanel(options: DetailPanelOptions): DetailPanel {
     const swatch = swatchColor(attrs.tokenType, resolved.value);
     if (swatch !== undefined) {
       const preview = el('div', 'dtgraph-viewer__swatch');
-      preview.style.background = swatch;
+      preview.style.backgroundColor = swatch;
       preview.title = swatch;
       valueSection.appendChild(preview);
     }

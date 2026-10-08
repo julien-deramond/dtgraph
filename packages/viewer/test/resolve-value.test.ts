@@ -50,4 +50,22 @@ describe('swatchColor', () => {
     expect(swatchColor('color', '{color.brand}')).toBeUndefined();
     expect(swatchColor('dimension', '#123456')).toBeUndefined();
   });
+
+  it('never returns a value that could load a resource', () => {
+    for (const value of [
+      'url(https://host/x.png)',
+      ' URL( "https://host/x.png" )',
+      'image-set("https://host/x.png" 1x)',
+      '-webkit-image-set(url(x.png) 1x)',
+      'var(--x)',
+      'u\\72l(https://host/x.png)',
+    ]) {
+      expect(swatchColor('color', value)).toBeUndefined();
+      expect(swatchColor('color', { hex: value })).toBeUndefined();
+    }
+    expect(swatchColor('color', 'rgb(1 2 3)')).toBe('rgb(1 2 3)');
+    expect(swatchColor('color', 'color-mix(in srgb, red 50%, blue)')).toBe(
+      'color-mix(in srgb, red 50%, blue)',
+    );
+  });
 });

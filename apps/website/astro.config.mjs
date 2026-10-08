@@ -26,7 +26,28 @@ export default defineConfig({
         description: 'Render and validate Design Tokens Community Group (DTCG) token graphs.',
       },
       brand: { mark: './src/brand/mark.svg', favicons: './src/brand/favicons/' },
-      og: { art: './src/brand/og-art.png' },
+      // The author's other tools, in a quiet row of the docs footer. The same list sits in
+      // each of these tools, each leaving itself out.
+      related: [
+        {
+          name: 'Component Anatomy',
+          description: 'Interactive component anatomy for design system docs',
+          href: 'https://julien-deramond.github.io/component-anatomy/',
+        },
+        {
+          name: 'Transtyle',
+          description: 'A compiler for design systems: native themes from one set of tokens',
+          href: 'https://transtyle.github.io/transtyle/',
+        },
+        {
+          name: 'Bootstrap Tokens',
+          description: 'Bootstrap 6 as design tokens, with a theme builder',
+          href: 'https://julien-deramond.github.io/bootstrap-tokens/',
+        },
+      ],
+      // The site card (/og/index.png) prints its subtitle on one line, cut with an ellipsis:
+      // the site description doesn't fit, so the card gets a shorter line.
+      og: { art: './src/brand/og-art.png', subtitle: 'Dependency graphs for DTCG design tokens' },
       docs: {
         tool: { version: `v${version}` },
         tabs: [

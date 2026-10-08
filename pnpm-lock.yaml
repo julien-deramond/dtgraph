@@ -206,8 +206,8 @@ importers:
         specifier: 8.0.2
         version: 8.0.2(@astrojs/markdown-satteri@0.4.2)(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))
       '@deramond.dev/astro':
-        specifier: ^0.10.0
-        version: 0.10.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))
+        specifier: ^0.11.0
+        version: 0.11.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))
       '@deramond.dev/tokens':
         specifier: ^0.3.0
         version: 0.3.0
@@ -790,8 +790,8 @@ packages:
     resolution: {integrity: sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==}
     engines: {node: '>=20.19.0'}
 
-  '@deramond.dev/astro@0.10.0':
-    resolution: {integrity: sha512-/LLn6f0oRxOTryGsdCa5U6DNLttW0ssdrBcLK9AUpplxIJ76Ax4C7QThh07WsLS87Lp3/dv1OnFNNfRAIc995w==}
+  '@deramond.dev/astro@0.11.0':
+    resolution: {integrity: sha512-lj/yt3JeIoFHvhTHgamq5HZ2zTyAR7c7aGvzL2nIPLaoIerYeMQ9Ff8jlMBK4x6vs3JnroRKFY2lLl8rjEFUjQ==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
       astro: ^7.3.0
@@ -4577,7 +4577,7 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.2': {}
 
-  '@deramond.dev/astro@0.10.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))':
+  '@deramond.dev/astro@0.11.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))':
     dependencies:
       '@deramond.dev/tokens': 0.3.0
       '@fontsource/chakra-petch': 5.3.0

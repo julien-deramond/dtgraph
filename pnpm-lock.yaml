@@ -206,8 +206,8 @@ importers:
         specifier: 8.0.2
         version: 8.0.2(@astrojs/markdown-satteri@0.4.2)(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))
       '@deramond.dev/astro':
-        specifier: ^0.11.0
-        version: 0.11.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))
+        specifier: ^0.13.0
+        version: 0.13.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))
       '@deramond.dev/tokens':
         specifier: ^0.3.0
         version: 0.3.0
@@ -790,8 +790,8 @@ packages:
     resolution: {integrity: sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==}
     engines: {node: '>=20.19.0'}
 
-  '@deramond.dev/astro@0.11.0':
-    resolution: {integrity: sha512-lj/yt3JeIoFHvhTHgamq5HZ2zTyAR7c7aGvzL2nIPLaoIerYeMQ9Ff8jlMBK4x6vs3JnroRKFY2lLl8rjEFUjQ==}
+  '@deramond.dev/astro@0.13.0':
+    resolution: {integrity: sha512-S5owSjWP1HW1jFpPmvNAwtkJ2ssRnrYPsAk1lLZ0L3RU4L64VzZhhswPLqHtJqDXCMMcoOoxmToOLoUENDbb/w==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
       astro: ^7.3.0
@@ -3226,6 +3226,10 @@ packages:
     resolution: {integrity: sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA==}
     engines: {node: '>=18'}
 
+  opentype.js@2.0.0:
+    resolution: {integrity: sha512-kCyjv6xdDY1W/jLWZ/L3QhhTlKUqDZMQ5+Jdlw12b3dXkKNpYBqqlMMj0YDQPShWFTMwgZI1hG14kN3XUDSg/A==}
+    hasBin: true
+
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -4577,7 +4581,7 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.2': {}
 
-  '@deramond.dev/astro@0.11.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))':
+  '@deramond.dev/astro@0.13.0(astro@7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1))':
     dependencies:
       '@deramond.dev/tokens': 0.3.0
       '@fontsource/chakra-petch': 5.3.0
@@ -4585,6 +4589,7 @@ snapshots:
       '@fontsource/roboto-mono': 5.3.0
       '@resvg/resvg-js': 2.6.2
       astro: 7.3.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.6.3)(yaml@2.9.1)
+      opentype.js: 2.0.0
       pagefind: 1.5.2
       satori: 0.33.5
 
@@ -6727,6 +6732,8 @@ snapshots:
       define-lazy-prop: 3.0.0
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
+
+  opentype.js@2.0.0: {}
 
   optionator@0.9.4:
     dependencies:

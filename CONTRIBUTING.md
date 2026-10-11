@@ -23,9 +23,9 @@ changes, and get code reviewed — for both human and AI-agent contributors.
    *why* without reading the whole diff first.
 4. Link the PR to the issue it resolves (`Closes #N`).
 5. Label the PR to match the "Type of change" you checked in the template
-   (`bug`, `feature`, `enhancement`, or `documentation`), plus `ai-submitted` if it
-   was opened by an agent. Labels aren't optional decoration — filtering PRs by label
-   is how reviewers and future contributors find related work.
+   (`bug`, `feature`, `enhancement`, or `documentation`). Labels aren't optional
+   decoration — filtering PRs by label is how reviewers and future contributors find
+   related work.
 
 ## Re-recording the README demo
 
@@ -77,7 +77,6 @@ incomplete, the same as one without a description.
 | `enhancement` | Improvement to something that already exists | issues, PRs | anyone, at creation time |
 | `documentation` | Docs-only or repo-governance change | PRs | anyone, at creation time |
 | `upstream-drift` | dtgraph's behavior has drifted from the DTCG spec or a reference tool it tracks (e.g. `@udt/dtcg-parser`, `tokenc`) | issues, PRs | anyone, at creation time |
-| `ai-submitted` | Opened by an AI agent rather than a human | issues, PRs | the agent, at creation time |
 
 Label colors follow the same system as
 [julien-deramond/bootstrap-tokens](https://github.com/julien-deramond/bootstrap-tokens/labels)
@@ -95,14 +94,11 @@ down explicitly rather than assumed:
   detailed enough that the work could be implemented from the issue alone: concrete
   expected behavior, edge cases, and any relevant DTCG spec references — not just a
   one-line note.
-- **Labeling.** The agent adds the `ai-submitted` label in addition to whatever the
-  template already applies (`bug`/`feature`/`enhancement`).
 - **Implementing.** Follow the same development workflow as anyone else: a branch per
   issue, a PR that follows the PR template, and a description detailed and
   human-readable enough for a maintainer to review without extra context-gathering.
-  Label the PR with its type (`bug`/`feature`/`enhancement`/`documentation`) plus
-  `ai-submitted` — the same rule as issues, applied at PR creation, not left for a
-  maintainer to add later.
+  Label the PR with its type (`bug`/`feature`/`enhancement`/`documentation`) at PR
+  creation, not left for a maintainer to add later.
 - **Closing stale issues.** `Closes #N` in a PR description only catches the issue
   that PR was written for. After merging a PR (or when a release goes out), check
   whether the change also resolves *other* open issues that a `Closes #N` link

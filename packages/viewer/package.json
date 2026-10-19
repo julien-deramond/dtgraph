@@ -54,7 +54,7 @@
     "graphology": "0.26.0",
     "graphology-layout": "0.6.1",
     "graphology-layout-forceatlas2": "0.10.1",
-    "sigma": "3.0.3"
+    "sigma": "4.0.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

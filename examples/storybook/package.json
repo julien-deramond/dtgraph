@@ -18,12 +18,12 @@
     "@dtgraph/core": "workspace:^",
     "@dtgraph/storybook": "workspace:^",
     "@dtgraph/viewer": "workspace:^",
-    "@storybook/react-vite": "10.6.1",
+    "@storybook/react-vite": "10.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "storybook": "10.6.1",
+    "storybook": "10.6.2",
     "typescript": "6.0.3",
-    "vite": "8.3.2"
+    "vite": "8.3.4"
   },
   "engines": {
     "node": ">=20"

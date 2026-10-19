@@ -24,6 +24,11 @@ updates:
       # See https://github.com/withastro/roadmap/discussions/1321
       - dependency-name: 'typescript'
         versions: ['>=7.0.0']
+      # sigma 4 rewrites the rendering API @dtgraph/viewer is built on (programs,
+      # canvas label drawers, Camera#animatedReset). The viewer moves to sigma 4 in
+      # its own PR, which removes this entry.
+      - dependency-name: 'sigma'
+        versions: ['>=4.0.0']
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:

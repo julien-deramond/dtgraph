@@ -17,23 +17,55 @@ npx dtgraph <command> ...
 
 ## Usage
 
-### `dtgraph render <files...> [-o, --output <file>] [-c, --context <modifier=context>]`
+### `dtgraph render <files...> [-o, --output <file>] [-c, --context <modifier=context>] [--format svg|mermaid]`
 
 Parses and resolves one or more DTCG token files (aliases are resolved across files when more
-than one is given) and renders the result to an SVG token graph. If one of the files is a
-[resolver](#resolver-files), it drives the merge.
+than one is given) and renders the result to an SVG token graph, or to [Mermaid](#mermaid-output)
+text. If one of the files is a [resolver](#resolver-files), it drives the merge.
 
 ```sh
 dtgraph render tokens.json -o graph.svg
 dtgraph render color.json typography.json -o graph.svg
 dtgraph render tokens.json > graph.svg   # no -o: SVG is written to stdout
 dtgraph render ds.resolver.json base.json themes/*.json components.json -c theme=dark -o dark.svg
+dtgraph render tokens.json --format mermaid -o graph.mmd
+dtgraph render tokens.json --format mermaid --fence   # paste the output into a README, issue or PR
 ```
 
 | Flag                              | Description                                                             |
 | --------------------------------- | ----------------------------------------------------------------------- |
-| `-o, --output <file>`             | Write the SVG to this file instead of stdout                            |
+| `-o, --output <file>`             | Write the output to this file instead of stdout                         |
 | `-c, --context <modifier=context>` | With a resolver: select a modifier context (repeatable, or comma-separated) |
+| `--format <format>`               | `svg` (default) or `mermaid`                                            |
+| `--fence`                         | With `--format mermaid`: wrap the diagram in a ` ```mermaid ` code fence |
+| `--full-paths`                    | With `--format mermaid`: label nodes with their full token path, not the last segment |
+
+#### Mermaid output
+
+GitHub, GitLab, Notion and most docs tools render [Mermaid](https://mermaid.js.org/) diagrams
+from plain text, so `--format mermaid` gives a token graph you can paste where an image would
+have to be hosted. It is a `flowchart LR` with one subgraph per top-level group, alias edges as
+solid arrows and composite-member edges as dotted arrows labeled with the member (`color` on a
+`border` token), each pointing from the token that references to the token referenced:
+
+```mermaid
+flowchart LR
+  subgraph g_color_h28rbs ["color"]
+    t_color_blue_500_1bllcy0["blue-500"]
+    t_color_gray_900_1wsdqwv["gray-900"]
+  end
+  subgraph g_button_is7gq9 ["button"]
+    t_button_primary_background_1a2512d["background"]
+    t_button_border_17x9zsf["border"]
+  end
+  t_button_primary_background_1a2512d --> t_color_blue_500_1bllcy0
+  t_button_border_17x9zsf -.->|"color"| t_color_gray_900_1wsdqwv
+```
+
+Mermaid lays the diagram out itself and becomes hard to read past a couple hundred tokens;
+renderers also refuse diagrams over their limits (by default 50,000 characters or 500 edges).
+Use it to share a slice of a token set — one file, one theme — and the
+[playground](https://julien-deramond.github.io/dtgraph/) to explore a whole one.
 
 ### `dtgraph validate <files...> [--json] [-c, --context <modifier=context>]`
 

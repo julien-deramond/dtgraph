@@ -10,10 +10,10 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/mdx": "8.0.3",
+    "@astrojs/mdx": "8.1.0",
     "@dtgraph/core": "workspace:^",
     "@dtgraph/mdx": "workspace:^",
-    "astro": "7.3.8"
+    "astro": "7.4.0"
   },
   "engines": {
     "node": ">=20"

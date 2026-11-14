@@ -11,6 +11,7 @@ From the repo root, after `pnpm install` and `pnpm run build`:
 ```sh
 node packages/cli/dist/cli.js validate examples/basic-tokens/tokens.json
 node packages/cli/dist/cli.js render examples/basic-tokens/tokens.json -o graph.svg
+node packages/cli/dist/cli.js render examples/basic-tokens/tokens.json --format mermaid --fence
 ```
 
 Or, once `dtgraph` is installed globally (see [`packages/cli`](../../packages/cli)):

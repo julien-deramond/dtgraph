@@ -37,13 +37,13 @@
   },
   "dependencies": {
     "@dtgraph/core": "workspace:^",
-    "commander": "15.0.0"
+    "commander": "15.1.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
     "esbuild": "0.28.2",
     "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "engines": {
     "node": ">=20"
